@@ -1,3 +1,10 @@
+/*
+Call things from the server API here. This is the front end code, what runs on the client. 
+Code is in js. Functions return html to be rendered in the browser. 
+
+Research jsx format for the html 
+*/
+
 import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import Link from "next/link";

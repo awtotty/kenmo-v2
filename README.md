@@ -1,3 +1,49 @@
+# Planning notes
+
+## Data structures  
+User: 
+  - userId 
+  - enrollments: List(enrollmentId)
+  - bankBalances: List(float)
+  - transactions: List(Transaction)
+  - cash: float
+
+Enrollment: 
+  - enrollmentId
+  - userId (foreign)
+  - classId (foreign)
+  - role: enum(teacher, student)
+  - bankBalance: float
+  - bankInterest: float
+
+Class: 
+  - classId
+  - name: string
+  - enrollments: List(enrollmentId)
+
+Transaction: 
+  - transactionId
+  - from: userId  
+  - to: userId
+  - amount: float
+  - date: datetime
+  - note: string
+
+CustomTransaction: 
+  - customTransactionId
+  - amount: float
+  - sendReceive: enum(send, receive)
+
+## Tasks
+1. Set up database 
+1. User managment with Clerk
+1. Class management
+1. Transactions
+1. Interest
+1. Custom transactions
+1. UI
+
+
 # Create T3 App
 
 This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
