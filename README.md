@@ -3,9 +3,9 @@
 ## Data structures  
 User: 
   - userId 
+  - name: string
   - enrollments: List(enrollmentId)
-  - bankBalances: List(float)
-  - transactions: List(Transaction)
+  - transactions: List(transactionId)
   - cash: float
 
 Enrollment: 
@@ -31,8 +31,8 @@ Transaction:
 
 CustomTransaction: 
   - customTransactionId
+  - user
   - amount: float
-  - sendReceive: enum(send, receive)
 
 ## Tasks
 1. Set up database 
