@@ -1,9 +1,15 @@
-# Planning notes
+# Learnings
+- To sync data between Clerk accounts and databases, use Clerk webhooks. 
+  - This was used becuase the User data model is an extnension of the Clerk user. 
+  - The full User model is stored in the database
+  - When users are created, updated, or deleted via Clerk, those changes should be reflected in the db. 
+  - https://clerk.com/docs/users/sync-data 
 
+
+# Planning notes
 ## Data structures  
 User: 
   - userId 
-  - name: string
   - enrollments: List(enrollmentId)
   - transactions: List(transactionId)
   - cash: float
