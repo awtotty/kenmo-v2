@@ -5,6 +5,10 @@ import Link from "next/link";
 import { api } from "~/utils/api";
 
 export default function Home() {
+  const cash = api.cash.get.useQuery();
+
+  if (cash.isLoading) return <div>Loading...</div>;
+
   return (
     <>
       <Head>
@@ -15,7 +19,7 @@ export default function Home() {
       <main className="flex justify-center items-center border-t border-b">
         <UserButton afterSignOutUrl="/" />
         <div>
-          Hi. 
+          Hi {cash.data?.name ?? "there"}. Your cash is ${cash.data?.amount}.
         </div>
       </main>
     </>
