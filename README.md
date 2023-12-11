@@ -4,6 +4,13 @@
   - The full User model is stored in the database
   - When users are created, updated, or deleted via Clerk, those changes should be reflected in the db. 
   - https://clerk.com/docs/users/sync-data 
+- Be careful with db pushes
+  - I had to repopulate my test data multiple times due to db push creating incompatible tables. 
+  - If you get a warning the db will be cleared, consider a different solution. 
+  - In the future, I would like to automate test data generation
+- `Promise.all` is required when map involves an async function
+  - ChatGPT provided the answer to this immediately after giving the two source files and the error
+  - Lots of searching produced no guidance, but ChatGPT worked really quickly
 
 
 # Planning notes
