@@ -4,12 +4,13 @@ import Link from "next/link";
 import router, { useRouter } from "next/router";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { PageLayout } from "~/components/layout";
 
 import { api } from "~/utils/api";
 
 
 export default function ClassPage() {
-  const router = useRouter()  
+  const router = useRouter()
 
   return (
     <>
@@ -18,10 +19,11 @@ export default function ClassPage() {
         <meta name="description" content="Digital Ken Kash" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="flex flex-col justify-center items-center">
-        <p>Class code: {router.query.classCode}</p>
+
+      <PageLayout>
+        <p> Class code: {router.query.classCode}</p>
         Withdraw page
-      </main >
+      </PageLayout >
     </>
   );
 }

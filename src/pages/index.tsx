@@ -2,6 +2,7 @@ import Head from "next/head";
 import { CashCard } from "~/components/cashCard";
 import { ClassCard } from "~/components/classCard";
 import { PageLayout } from "~/components/layout";
+import { Nav } from "~/components/navigation";
 import { api } from "~/utils/api";
 
 const AccountFeed = () => {

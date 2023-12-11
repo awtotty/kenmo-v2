@@ -50,4 +50,5 @@ model CustomTransaction {
 enum Role {
   STUDENT
   TEACHER
+  ADMIN
 }

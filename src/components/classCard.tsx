@@ -1,15 +1,22 @@
 import Link from "next/link";
 import { RouterOutputs } from "~/utils/api";
+import { ROLE } from "~/utils/constants";
 
 type EnrollmentWithClassInfo = RouterOutputs["enrollment"]["getAll"][0];
 export const ClassCard = ({ enrollment, numTransactions = 5 }: { enrollment: EnrollmentWithClassInfo, numTransactions: number }) => {
+
   return (
     <>
       <div className="items-center w-full md:max-w-2xl" key={enrollment.id}>
         {/* main card body */}
         <div className="flex items-center border w-full md:max-w-2xl p-4">
-          <div className="float-left">
-            {enrollment.className}
+          <div className="float-left flex-col">
+            <div className="text-left">
+              {enrollment.className}
+            </div>
+            <div className="text-left">
+              {enrollment.role}
+            </div>
           </div>
           <div className="flex-grow"></div>
           <div className="float-right">

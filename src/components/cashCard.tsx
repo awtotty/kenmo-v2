@@ -1,4 +1,3 @@
-import { UserButton } from "@clerk/nextjs";
 import { api } from "~/utils/api";
 
 export const CashCard = () => {
@@ -10,8 +9,6 @@ export const CashCard = () => {
       <>
         <div className="flex items-center border w-full md:max-w-2xl p-4">
           <div className="flex float-left justify-center items-center">
-            <UserButton afterSignOutUrl="/" />
-            <div className="p-2"></div>
             <div className="text-left">
               Hi {cash.data?.name ?? "there"}!
             </div>
