@@ -12,6 +12,14 @@
   - ChatGPT provided the answer to this immediately after giving the two source files and the error
   - Lots of searching produced no guidance, but ChatGPT worked really quickly
 
+# Build notes
+1. Production setup and db schema planning (1.5 hr)
+1. Account management with Clerk (0.5 hr)
+1. Cash logic and basic home page (2 hr)
+1. Enrollment logic and account cards on home page (3 hr)
+1. Single account page and dynamic routing for classes 
+1. 
+
 
 # Planning notes
 ## Data structures  

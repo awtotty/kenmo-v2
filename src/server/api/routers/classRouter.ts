@@ -15,4 +15,16 @@ export const classRouter = createTRPCRouter({
         }
       })
     }),
+
+  getClassByCode: publicProcedure
+  .input(z.object({
+    classCode: z.string()
+  }))
+    .query(async ({ ctx, input }) => {
+      return await ctx.db.class.findFirst({
+        where: {
+          classCode: input?.classCode
+        }
+      })
+    }),
 });

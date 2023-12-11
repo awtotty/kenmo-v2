@@ -5,7 +5,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  relationMode = "prisma"
 }
 
 model Cash {
@@ -23,15 +22,13 @@ model Enrollment {
   bankInterest String
   userId       String
   classId      Int
-  class        Class  @relation(fields: [classId], references: [id])
 }
 
 model Class {
-  id                Int                 @id @default(autoincrement())
-  name              String
-  enrollments       Int[]
-  CustomTransaction CustomTransaction[]
-  Enrollment        Enrollment[]
+  name        String
+  enrollments Int[]
+  id          Int    @id @default(autoincrement())
+  classCode   String @unique
 }
 
 model Transaction {
@@ -48,7 +45,6 @@ model CustomTransaction {
   amount  String
   userId  Int
   classId Int
-  class   Class  @relation(fields: [classId], references: [id])
 }
 
 enum Role {

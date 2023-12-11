@@ -5,14 +5,16 @@ import type { Enrollment } from "@prisma/client";
 import { db } from "~/server/db";
 
 
-const addClassNameToEnrollment = async (enrollment: Enrollment) => {
+const addClassInfoToEnrollment = async (enrollment: Enrollment) => {
+  const classObj = await db.class.findFirst({
+    where: {
+      id: enrollment.classId
+    }
+  });
   return {
     ...enrollment,
-    className: await db.class.findFirst({
-      where: {
-        id: enrollment.classId
-      }
-    }).then((classObj) => classObj?.name)
+    className: classObj?.name,
+    classCode: classObj?.classCode,
   }
 };
 
@@ -27,7 +29,30 @@ export const enrollmentRouter = createTRPCRouter({
 
       // Use Promise.all to await all promises returned by addClassNameToEnrollment
       return await Promise.all(
-        enrollments.map(async (enrollment) => await addClassNameToEnrollment(enrollment))
+        enrollments.map(async (enrollment) => await addClassInfoToEnrollment(enrollment))
+      );
+    }),
+
+  getByClassCode: publicProcedure
+    .input(z.object({
+      classCode: z.string()
+    }))
+    .query(async ({ ctx, input }) => {
+      const classObj = await db.class.findFirst({
+        where: {
+          classCode: input.classCode
+        }
+      });
+
+      const enrollments = await ctx.db.enrollment.findMany({
+        where: {
+          classId: classObj?.id,
+          userId: ctx.auth?.userId!
+        }
+      });
+
+      return await Promise.all(
+        enrollments.map(async (enrollment) => await addClassInfoToEnrollment(enrollment))
       );
     }),
 });
