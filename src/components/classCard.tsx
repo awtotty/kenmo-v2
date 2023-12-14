@@ -21,6 +21,9 @@ export const ClassCard = ({ enrollment, numTransactions = 5 }: { enrollment: Enr
           <div className="flex-grow"></div>
           <div className="float-right">
             <div className="text-right">
+              Cash Balance: ${enrollment.cash}
+            </div>
+            <div className="text-right">
               Bank Balance: ${enrollment.bankBalance}
             </div>
             <Link href={`/class/${enrollment.classCode}/withdraw`}>

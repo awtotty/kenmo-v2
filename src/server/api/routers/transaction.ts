@@ -6,7 +6,10 @@ import type { Cash } from "@prisma/client";
 export const transactionRouter = createTRPCRouter({
   create: protectedProcedure.input(
     z.object({
-      content: z.string().emoji("Only emojis are allowed").min(1).max(280),
+      from: z.number().int(),
+      to: z.number().int(),
+      amount: z.number(),
+      note: z.string(),
     }),
   ).mutation(async ({ ctx, input }) => {
     // User has to be signed in to create a post
@@ -30,18 +33,33 @@ export const transactionRouter = createTRPCRouter({
     //   throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Too many requests" });
     // }
 
-    const newPost = await ctx.db.transaction.create({
-      data: {
-        fromUserId: userId,
-        // toUserId: input.content.to,
-        // amount: input.content.amount,
-        // note: input.content.note,
-        toUserId: "",
-        amount: "0.00",
-        note: "",
+    // TODO: check if user has authority to create this transaction
+
+    const fromEnrollment = ctx.db.enrollment.findFirst({
+      where: {
+        id: input.from,
       },
     });
 
-    return newPost;
+    const toEnrollment = ctx.db.enrollment.findFirst({
+      where: {
+        id: input.to,
+      },
+    });
+
+    console.log("You're transacting from enrollment: ", fromEnrollment);
+
+    const newTransaction = await ctx.db.transaction.create({
+      data: {
+        fromEnrollmentId: input.from,
+        toEnrollmentId: input.to,
+        fromUserId: userId,
+        toUserId: userId,
+        amount: input.amount,
+        note: input.note,
+      },
+    });
+
+    return newTransaction;
   }),
 });

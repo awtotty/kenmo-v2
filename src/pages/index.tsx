@@ -1,4 +1,5 @@
 import Head from "next/head";
+import toast from "react-hot-toast";
 import { CashCard } from "~/components/cashCard";
 import { ClassCard } from "~/components/classCard";
 import { PageLayout } from "~/components/layout";
@@ -39,7 +40,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <PageLayout>
-        <CashCard />
+        {/* <CashCard /> */}
         <AccountFeed />
       </PageLayout>
     </>

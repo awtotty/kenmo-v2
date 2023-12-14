@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model Cash {
@@ -18,26 +19,32 @@ model Cash {
 model Enrollment {
   id           Int    @id @default(autoincrement())
   role         Role
-  bankBalance  String
-  bankInterest String
+  cash         Float
+  bankBalance  Float
+  bankInterest Float
   userId       String
   classId      Int
+  class        Class  @relation(fields: [classId], references: [id])
 }
 
 model Class {
-  name        String
-  enrollments Int[]
-  id          Int    @id @default(autoincrement())
-  classCode   String @unique
+  id                Int                 @id @default(autoincrement())
+  name              String
+  enrollments       Int[]
+  CustomTransaction CustomTransaction[]
+  Enrollment        Enrollment[]
+  classCode         String              @unique
 }
 
 model Transaction {
-  id         Int      @id @default(autoincrement())
-  amount     String
-  createdAt  DateTime @default(now())
-  note       String
-  fromUserId String
-  toUserId   String
+  id               Int      @id @default(autoincrement())
+  amount           Float
+  createdAt        DateTime @default(now())
+  note             String
+  fromUserId       String
+  toUserId         String
+  fromEnrollmentId Int
+  toEnrollmentId   Int
 }
 
 model CustomTransaction {
@@ -45,6 +52,7 @@ model CustomTransaction {
   amount  String
   userId  Int
   classId Int
+  class   Class  @relation(fields: [classId], references: [id])
 }
 
 enum Role {
