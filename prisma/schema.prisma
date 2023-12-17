@@ -37,14 +37,15 @@ model Class {
 }
 
 model Transaction {
-  id               Int      @id @default(autoincrement())
+  id               Int        @id @default(autoincrement())
   amount           Float
-  createdAt        DateTime @default(now())
+  createdAt        DateTime   @default(now())
   note             String
   fromUserId       String
   toUserId         String
   fromEnrollmentId Int
   toEnrollmentId   Int
+  transactionType  TransType?
 }
 
 model CustomTransaction {
@@ -59,4 +60,10 @@ enum Role {
   STUDENT
   TEACHER
   ADMIN
+}
+
+enum TransType {
+  WITHDRAW
+  DEPOSIT
+  TRANSFER
 }

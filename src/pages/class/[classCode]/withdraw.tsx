@@ -1,4 +1,4 @@
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 import Head from "next/head";
 import Link from "next/link";
 import router, { useRouter } from "next/router";
@@ -9,24 +9,29 @@ import { PageLayout } from "~/components/layout";
 import { RouterInputs, RouterOutputs, api } from "~/utils/api";
 
 export default function ClassPage() {
-
   const router = useRouter()
   const [isButtonDisabled, setButtonDisabled] = useState(false);
+  const [amount, setAmount] = useState(0);
 
   // define the mutation and what to do when it succeeds
-  const { mutate: withdraw, isLoading: withdrawIsLoading } = api.transaction.create.useMutation({
+  const { mutate: withdraw, isLoading: withdrawIsLoading } = api.transaction.withdrawFromBank.useMutation({
     onSuccess: () => {
       toast.success("Withdrawal successful!");
+      setAmount(0);
+
       setTimeout(() => {
         setButtonDisabled(false);
         // router.push("/");
-      }, 2000);
+      }, 1000);
     },
     onError: (error) => {
       toast.error(`Withdrawal failed: ${error.message}`);
       setButtonDisabled(false);
     },
   });
+
+  const userId = useUser().user?.id;
+  if (!userId) return <div>Not logged in</div>;
 
   return (
     <>
@@ -40,21 +45,30 @@ export default function ClassPage() {
         <p> Class code: {router.query.classCode}</p>
         Withdraw page
 
+        <input
+          className="text-black border rounded py-2 px-4 bg-gray-100 focus:outline-none focus:ring focus:border-blue-300"
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(parseFloat(e.target.value))}
+          placeholder="Amount"
+        />
+        <input className="text-black border rounded py-2 px-4 bg-gray-100 focus:outline-none focus:ring focus:border-blue-300" type="text" placeholder="Note" />
+
         <button
           className="bg-red-500 hover:bg-red-300 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={() => {
             if (isButtonDisabled) return;
             setButtonDisabled(true);
             withdraw({
-              from: 1,
-              to: 2,
-              amount: 100,
-              note: "test",
+              userId: userId as string,
+              classCode: router.query.classCode as string,
+              amount: amount,
+              note: "Withdrawal from class",
             });
           }}
           disabled={isButtonDisabled || withdrawIsLoading}
         >Do it</button>
-        
+
       </PageLayout >
     </>
   );
