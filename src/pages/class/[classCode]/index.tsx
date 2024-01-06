@@ -22,6 +22,9 @@ export default function ClassPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <PageLayout>
+        <div>
+          Class code: {classCode}
+        </div>
         {/* list all enrollments */}
         <div className="flex flex-col">
           {enrollments?.map((enrollment) => (
@@ -41,8 +44,6 @@ export default function ClassPage() {
             </div>
           ))}
         </div>
-
-        Class page for class code: {classCode}
 
       </PageLayout>
     </>

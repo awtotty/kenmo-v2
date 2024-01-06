@@ -14,7 +14,6 @@ const cleanEnrollmentForClient = async (enrollment: Enrollment) => {
   });
   
   const user = await clerkClient.users.getUser(enrollment.userId)
-  console.log(user ?? "No user found")
 
   return {
     id: enrollment.id,

@@ -11,13 +11,16 @@
 - `Promise.all` is required when map involves an async function
   - ChatGPT provided the answer to this immediately after giving the two source files and the error
   - Lots of searching produced no guidance, but ChatGPT worked really quickly
+- Double-entry bookeeping is preferred.
+  - I scrapped a lot of the early work on transactions that approached bookeeping as single-entry. 
 
 # Build notes
 1. Production setup and db schema planning (1.5 hr)
 1. Account management with Clerk (0.5 hr)
 1. Cash logic and basic home page (2 hr)
 1. Enrollment logic and account cards on home page (3 hr)
-1. Single account page and dynamic routing for classes 
+1. Single account page and dynamic routing for classes (2 hr)
+1. Class creation and management (3 hr)
 1. 
 
 
