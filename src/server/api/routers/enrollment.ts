@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import type { Enrollment } from "@prisma/client";
 import { db } from "~/server/db";
 
@@ -19,7 +19,7 @@ const addClassInfoToEnrollment = async (enrollment: Enrollment) => {
 };
 
 export const enrollmentRouter = createTRPCRouter({
-  getAll: publicProcedure
+  getAllCurrentUser: protectedProcedure
     .query(async ({ ctx }) => {
       const enrollments = await ctx.db.enrollment.findMany({
         where: {

@@ -1,12 +1,11 @@
-import { UserButton, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import Head from "next/head";
-import Link from "next/link";
-import router, { useRouter } from "next/router";
+import { useRouter } from "next/router";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
-
-import { RouterInputs, RouterOutputs, api } from "~/utils/api";
+import { api } from "~/utils/api";
+import { ClassCard } from "~/components/classCard";
 
 export default function ClassPage() {
   const router = useRouter()
@@ -33,6 +32,9 @@ export default function ClassPage() {
   const userId = useUser().user?.id;
   if (!userId) return <div>Not logged in</div>;
 
+  // const enrollment = api.enrollment.getByClassCode.useQuery({classCode: router.query.classCode as string}).data?.[0];
+  // if (!enrollment) return <div>Not enrolled in this class</div>;
+
   return (
     <>
       <Head>
@@ -44,6 +46,8 @@ export default function ClassPage() {
       <PageLayout>
         <p> Class code: {router.query.classCode}</p>
         Withdraw page
+
+        {/* <ClassCard enrollment={enrollment} numTransactions={5} /> */}
 
         <input
           className="text-black border rounded py-2 px-4 bg-gray-100 focus:outline-none focus:ring focus:border-blue-300"
@@ -63,7 +67,7 @@ export default function ClassPage() {
               userId: userId as string,
               classCode: router.query.classCode as string,
               amount: amount,
-              note: "Withdrawal from class",
+              note: `Withdraw from class ${router.query.classCode}`,
             });
           }}
           disabled={isButtonDisabled || withdrawIsLoading}

@@ -8,62 +8,68 @@ datasource db {
   relationMode = "prisma"
 }
 
-model Cash {
-  id     Int    @id @default(autoincrement())
-  userId String
-  amount String
+model Account {
+  id                 Int      @id @default(autoincrement())
+  ownerId            String
+  balance            Float
+  interestRate       Float
+  interestPeriodDays Float
+  Ledger             Ledger[]
 
-  @@index([userId])
+  @@index([ownerId])
 }
 
 model Enrollment {
-  id           Int    @id @default(autoincrement())
-  role         Role
-  cash         Float
-  bankBalance  Float
-  bankInterest Float
-  userId       String
-  classId      Int
-  class        Class  @relation(fields: [classId], references: [id])
+  id                  Int    @id @default(autoincrement())
+  userId              String
+  classId             Int
+  role                Role
+  class               Class  @relation(fields: [classId], references: [id])
+  investmentAccountId Int
+  checkingAccountId   Int
+
+  @@index([id])
 }
 
 model Class {
   id                Int                 @id @default(autoincrement())
   name              String
-  enrollments       Int[]
-  CustomTransaction CustomTransaction[]
-  Enrollment        Enrollment[]
   classCode         String              @unique
+  Enrollment        Enrollment[]
+  CustomTransaction CustomTransaction[]
+
+  @@index([id])
+}
+
+model Ledger {
+  id        Int      @id @default(autoincrement())
+  accountId Int
+  account   Account  @relation(fields: [accountId], references: [id])
+  debit     Float
+  credit    Float
+  datetime  DateTime @default(now())
+
+  @@index([id])
 }
 
 model Transaction {
-  id               Int        @id @default(autoincrement())
-  amount           Float
-  createdAt        DateTime   @default(now())
-  note             String
-  fromUserId       String
-  toUserId         String
-  fromEnrollmentId Int
-  toEnrollmentId   Int
-  transactionType  TransType?
+  id        Int      @id @default(autoincrement())
+  from      String
+  to        String
+  amount    Float
+  createdAt DateTime @default(now())
+  note      String
 }
 
 model CustomTransaction {
   id      Int    @id @default(autoincrement())
   amount  String
-  userId  Int
-  classId Int
-  class   Class  @relation(fields: [classId], references: [id])
+  Class   Class? @relation(fields: [classId], references: [id])
+  classId Int?
 }
 
 enum Role {
   STUDENT
   TEACHER
   ADMIN
-}
-
-enum TransType {
-  WITHDRAW
-  DEPOSIT
-  TRANSFER
 }

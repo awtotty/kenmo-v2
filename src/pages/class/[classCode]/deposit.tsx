@@ -1,12 +1,10 @@
-import { UserButton, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import Head from "next/head";
-import Link from "next/link";
-import router, { useRouter } from "next/router";
+import { useRouter } from "next/router";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
-
-import { RouterInputs, RouterOutputs, api } from "~/utils/api";
+import { api } from "~/utils/api";
 
 export default function ClassPage() {
   const router = useRouter()
@@ -63,7 +61,7 @@ export default function ClassPage() {
               userId: userId as string,
               classCode: router.query.classCode as string,
               amount: amount,
-              note: "Deposit from class",
+              note: `Deposit from class ${router.query.classCode}`,
             });
           }}
           disabled={isButtonDisabled || depositIsLoading}

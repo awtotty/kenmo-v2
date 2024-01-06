@@ -1,15 +1,8 @@
-import { UserButton } from "@clerk/nextjs";
 import Head from "next/head";
-import Link from "next/link";
-import router, { useRouter } from "next/router";
-import { useState } from "react";
-import toast from "react-hot-toast";
+import { useRouter } from "next/router";
 import { ClassCard } from "~/components/classCard";
 import { PageLayout } from "~/components/layout";
-import { Nav } from "~/components/navigation";
-
 import { api } from "~/utils/api";
-
 
 export default function ClassPage() {
   const router = useRouter()  

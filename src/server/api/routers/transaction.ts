@@ -17,7 +17,7 @@ export const transactionRouter = createTRPCRouter({
       throw new TRPCClientError("You can only withdraw from your own account");
     }
 
-    const enrollment = await ctx.db.enrollment.findFirst({ 
+    const enrollment = await ctx.db.enrollment.findFirst({
       where: {
         userId: input.userId,
         class: {
@@ -28,7 +28,7 @@ export const transactionRouter = createTRPCRouter({
 
     if (!enrollment) {
       throw new TRPCClientError("You are not enrolled in this class");
-    } 
+    }
 
     const updatedEnrollment = await ctx.db.enrollment.update({
       where: {
@@ -47,7 +47,7 @@ export const transactionRouter = createTRPCRouter({
     const newTransaction = await ctx.db.transaction.create({
       data: {
         fromEnrollmentId: enrollment.id,
-        toEnrollmentId: enrollment.id, 
+        toEnrollmentId: enrollment.id,
         fromUserId: input.userId,
         toUserId: input.userId,
         amount: input.amount,
@@ -58,7 +58,6 @@ export const transactionRouter = createTRPCRouter({
 
     return newTransaction;
   }),
-
 
   depositToBank: protectedProcedure.input(
     z.object({
@@ -72,7 +71,7 @@ export const transactionRouter = createTRPCRouter({
       throw new TRPCClientError("You can only deposit from your own account");
     }
 
-    const enrollment = await ctx.db.enrollment.findFirst({ 
+    const enrollment = await ctx.db.enrollment.findFirst({
       where: {
         userId: input.userId,
         class: {
@@ -83,7 +82,7 @@ export const transactionRouter = createTRPCRouter({
 
     if (!enrollment) {
       throw new TRPCClientError("You are not enrolled in this class");
-    } 
+    }
 
     const updatedEnrollment = await ctx.db.enrollment.update({
       where: {
@@ -102,7 +101,7 @@ export const transactionRouter = createTRPCRouter({
     const newTransaction = await ctx.db.transaction.create({
       data: {
         fromEnrollmentId: enrollment.id,
-        toEnrollmentId: enrollment.id, 
+        toEnrollmentId: enrollment.id,
         fromUserId: input.userId,
         toUserId: input.userId,
         amount: input.amount,
@@ -114,6 +113,32 @@ export const transactionRouter = createTRPCRouter({
     return newTransaction;
   }),
 
+  getManyByClassCode: protectedProcedure.input(
+    z.object({
+      userId: z.string(),
+      classCode: z.string(),
+      count: z.number().int().optional(),
+    }),
+  ).query(async ({ ctx, input }) => {
+    const transactions = ctx.db.transaction.findMany({
+      take: input.count ?? 10,
+      where: {
+        OR: [
+          {
+            toUserId: input.userId,
+          },
+          {
+            fromUserId: input.userId,
+          },
+        ],
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    })
+
+    return transactions;
+  }),
 
   // create: protectedProcedure.input(
   //   z.object({
