@@ -1,12 +1,33 @@
 import { z } from "zod";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
-import type { Account } from "@prisma/client";
-import { db } from "~/server/db";
 import { TRPCClientError } from "@trpc/client";
 
 
 export const accountRouter = createTRPCRouter({
+  create: protectedProcedure 
+    .input(z.object({
+      balance: z.number(),
+      interestRate: z.number(),
+      interestPeriodDays: z.number(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.auth?.userId) {
+        throw new TRPCClientError("You must be logged in to create an account")
+      }
+
+      const newAccount = await ctx.db.account.create({
+        data: {
+          ownerId: ctx.auth.userId,
+          balance: input.balance, 
+          interestRate: input.interestRate,
+          interestPeriodDays: input.interestPeriodDays,  
+        }
+      })
+
+      return newAccount
+    }), 
+
   getById: protectedProcedure
     .input(z.object({
       accountId: z.number().int()

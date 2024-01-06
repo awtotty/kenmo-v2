@@ -4,30 +4,6 @@ import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/
 import { TRPCClientError } from "@trpc/client";
 
 export const classRouter = createTRPCRouter({
-  getClassById: publicProcedure
-    .input(z.object({
-      classId: z.number().int()
-    }))
-    .query(async ({ ctx, input }) => {
-      return await ctx.db.class.findFirst({
-        where: {
-          id: input?.classId
-        }
-      })
-    }),
-
-  getClassByCode: publicProcedure
-    .input(z.object({
-      classCode: z.string()
-    }))
-    .query(async ({ ctx, input }) => {
-      return await ctx.db.class.findFirst({
-        where: {
-          classCode: input?.classCode
-        }
-      })
-    }),
-
   create: protectedProcedure
     .input(z.object({
       className: z.string(),
@@ -119,25 +95,31 @@ export const classRouter = createTRPCRouter({
       }
 
       // create two new accounts: one for investment and one for checking
-      // TODO: 
       const investmentAccount = await ctx.db.account.create({
         data: {
+          ownerId: ctx.auth.userId,
+          balance: 0,
+          interestRate: 0.01,
+          interestPeriodDays: 1, 
         }
       })
 
       const checkingAccount = await ctx.db.account.create({
         data: {
+          ownerId: ctx.auth.userId,
+          balance: 100,
+          interestRate: 0.00,
+          interestPeriodDays: -1, 
         }
       })
-
 
       const newEnrollment = await ctx.db.enrollment.create({
         data: {
           userId: ctx.auth.userId,
           classId: classObj.id,
           role: "STUDENT",
-          investmentAccountId: -1,
-          checkingAccountId: -1,
+          investmentAccountId: investmentAccount.id,
+          checkingAccountId: checkingAccount.id,
         }
       })
 

@@ -55,6 +55,7 @@ const JoinClass = () => {
             if (e.key === "Enter") {
               try {
                 await joinClass({ classCode: input });
+                setInput("");
               } catch (e) {
               }
             }
@@ -66,6 +67,7 @@ const JoinClass = () => {
           onClick={async () => {
             try {
               await joinClass({ classCode: input });
+              setInput("");
             } catch (e) {
             }
           }}>Join Class</button>

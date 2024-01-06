@@ -9,9 +9,6 @@ export const ClassCard = ({ enrollment, numTransactions = 5 }: { enrollment: Enr
   if (!userId) return <div>Not logged in</div>;
   if (!enrollment) return <div>Invalid enrollment</div>;
 
-  // const transactions = api.transaction.getManyByClassCode.useQuery({ userId: userId, classCode: enrollment.classCode }).data;
-
-
   if (enrollment.role === ROLE.ADMIN) {
     return (
       <>
@@ -29,12 +26,6 @@ export const ClassCard = ({ enrollment, numTransactions = 5 }: { enrollment: Enr
             <div className="flex-grow"></div>
             <div className="float-right">
               <div>
-                Checking Account: {enrollment.checkingAccountId}
-              </div>
-              <div>
-                Investment Account: {enrollment.investmentAccountId}
-              </div>
-              <div>
                 Class Code: {enrollment.classCode}
               </div>
             </div>
@@ -45,6 +36,9 @@ export const ClassCard = ({ enrollment, numTransactions = 5 }: { enrollment: Enr
   }
 
   else if (enrollment.role === ROLE.STUDENT) {
+    const checkingAccount = api.account.getById.useQuery({ accountId: enrollment.checkingAccountId }).data;
+    const investmentAccount = api.account.getById.useQuery({ accountId: enrollment.investmentAccountId }).data;
+
     return (
       <>
         <div className="items-center w-full md:max-w-2xl" key={enrollment.id}>
@@ -61,10 +55,10 @@ export const ClassCard = ({ enrollment, numTransactions = 5 }: { enrollment: Enr
             <div className="flex-grow"></div>
             <div className="float-right">
               <div>
-                Checking Account: {enrollment.checkingAccountId}
+                Checking: {checkingAccount?.balance}
               </div>
               <div>
-                Investment Account: {enrollment.investmentAccountId}
+                Investment: {investmentAccount?.balance}
               </div>
             </div>
           </div>
@@ -73,10 +67,13 @@ export const ClassCard = ({ enrollment, numTransactions = 5 }: { enrollment: Enr
     )
 
   }
+
   else {
     return <div>Invalid role</div>
   }
 
+
+  // const transactions = api.transaction.getManyByClassCode.useQuery({ userId: userId, classCode: enrollment.classCode }).data;
 
   {/* recent transactions list */ }
   {/* <div className="flex flex-col items-center md:max-w-xl p-2 w-10/12 border-x border-b">
