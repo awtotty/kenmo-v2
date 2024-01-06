@@ -6,7 +6,7 @@ import { TRPCClientError } from "@trpc/client";
 export const classRouter = createTRPCRouter({
   create: protectedProcedure
     .input(z.object({
-      className: z.string(),
+      className: z.string().min(1),
     }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth?.userId) {
@@ -66,7 +66,7 @@ export const classRouter = createTRPCRouter({
 
   join: protectedProcedure
     .input(z.object({
-      classCode: z.string(),
+      classCode: z.string().length(6),
     }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth?.userId) {

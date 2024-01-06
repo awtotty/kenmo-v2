@@ -35,7 +35,7 @@ const JoinClass = () => {
       await apiUtils.enrollment.getAllCurrentUser.invalidate();
     },
     onError: (error) => {
-      toast.error(`Class creation failed: ${error.message}`)
+      toast.error(`Could not join class. Do you have a valid class code?`)
     }
   })
 
@@ -70,7 +70,7 @@ const JoinClass = () => {
               setInput("");
             } catch (e) {
             }
-          }}>Join Class</button>
+          }}>Join</button>
       </div>
     </>
   )
@@ -86,18 +86,42 @@ const CreateClass = () => {
       await apiUtils.enrollment.getAllCurrentUser.invalidate();
     },
     onError: (error) => {
-      toast.error(`Class creation failed: ${error.message}`)
+      toast.error(`Could not create class. Class names can't be blank.`)
     }
   })
 
+  // input field for class code
+  const [input, setInput] = useState("");
+
   return (
     <>
-      <div className="flex flex-col justify-center w-full md: max-w-2xl items-center gap-4">
-        <button
-          className="bg-slate-400 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+      <div>
+        <input
+          placeholder="Class Name"
+          className="outline-none text-size-2xl flex-grow p-2 text-slate-800"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
           disabled={isLoading}
-          onClick={() => createClass({ className: "Test Class" })}
-        >Create Class</button>
+          onKeyDown={async (e) => {
+            if (e.key === "Enter") {
+              try {
+                await createClass({ className: input });
+                setInput("");
+              } catch (e) {
+              }
+            }
+          }}
+        />
+        <button
+          className="bg-slate-400 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          disabled={isLoading}
+          onClick={async () => {
+            try {
+              await createClass({ className: input });
+              setInput("");
+            } catch (e) {
+            }
+          }}>Create</button>
       </div>
     </>
   )

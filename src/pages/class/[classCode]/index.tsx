@@ -1,19 +1,18 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { ClassCard } from "~/components/classCard";
 import { PageLayout } from "~/components/layout";
 import { api } from "~/utils/api";
 
 export default function ClassPage() {
-  const router = useRouter()  
+  const router = useRouter()
 
   const classCode = router.query.classCode;
   if (!classCode) return <div>Loading...</div>;
   if (typeof classCode !== "string") return <div>Invalid class code</div>;
 
-  const { data: enrollment, isLoading } = api.enrollment.getByClassCode.useQuery({ classCode });
+  const { data: enrollments, isLoading } = api.enrollment.getAllByClassCode.useQuery({ classCode });
   if (isLoading) return <div>Loading...</div>;
-  if (!enrollment || enrollment.length == 0) return <div>No enrollment found. </div>;
+  if (!enrollments || enrollments.length == 0) return <div>No enrollments found.</div>;
 
   return (
     <>
@@ -23,12 +22,28 @@ export default function ClassPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <PageLayout>
-        <ClassCard enrollment={enrollment[0]!} numTransactions={1000} />
+        {/* list all enrollments */}
+        <div className="flex flex-col">
+          {enrollments?.map((enrollment) => (
+            <div
+              className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2"
+              key={enrollment.id}
+            >
+              <div>
+                {enrollment.firstName} {enrollment.lastName}
+              </div>
+              <div>
+                {enrollment.email}
+              </div>
+              <div>
+                {enrollment.role}
+              </div>
+            </div>
+          ))}
+        </div>
 
-      {/* TODO: delete enrollment */}
-        {/* <button className="bg-red-500 hover:bg-red-300 text-white font-bold py-2 px-4 rounded">
-          Leave class
-        </button> */}
+        Class page for class code: {classCode}
+
       </PageLayout>
     </>
   );
