@@ -15,6 +15,18 @@ const cleanEnrollmentForClient = async (enrollment: Enrollment) => {
   
   const user = await clerkClient.users.getUser(enrollment.userId)
 
+  const investmentAccount = await db.account.findFirst({
+    where: {
+      id: enrollment.investmentAccountId
+    }
+  });
+
+  const checkingAccount = await db.account.findFirst({
+    where: {
+      id: enrollment.checkingAccountId
+    }
+  });
+
   return {
     id: enrollment.id,
     firstName: user.firstName,
@@ -23,8 +35,8 @@ const cleanEnrollmentForClient = async (enrollment: Enrollment) => {
     role: enrollment.role,
     className: classObj?.name,
     classCode: classObj?.classCode,
-    investmentAccountId: enrollment.investmentAccountId,
-    checkingAccountId: enrollment.checkingAccountId,
+    investmentAccountBalance: investmentAccount?.balance,
+    checkingAccountBalance: checkingAccount?.balance,
   }
 }
 

@@ -26,6 +26,25 @@ export default function ClassPage() {
           Class code: {classCode}
         </div>
         {/* list all enrollments */}
+        <div> 
+          <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2">
+            <div>
+              Name
+            </div>
+            <div>
+              Email
+            </div>
+            <div>
+              Role
+            </div>
+            <div>
+              Checking
+            </div>
+            <div>
+              Investment
+            </div>
+          </div>
+        </div>
         <div className="flex flex-col">
           {enrollments?.map((enrollment) => (
             <div
@@ -40,6 +59,12 @@ export default function ClassPage() {
               </div>
               <div>
                 {enrollment.role}
+              </div>
+              <div>
+                {enrollment.checkingAccountBalance ?? "?"}
+              </div>
+              <div>
+                {enrollment.investmentAccountBalance ?? "?"}
               </div>
             </div>
           ))}
