@@ -28,7 +28,7 @@ export const ClassCard = ({ enrollment, numTransactions = 5 }: { enrollment: Enr
               <div>
                 Class Code: {enrollment.classCode}
               </div>
-              <Link href={`/class/${enrollment.classCode}`}>
+              <Link href={`/class/${enrollment.classCode}/manage`}>
                 <button className="flex bg-slate-500 hover:bg-blue-700 text-white py-0 px-2 rounded">
                   Manage
                 </button>

@@ -41,6 +41,9 @@ export default function ClassPage() {
         <div>
           <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2">
             <div>
+              Pay 
+            </div>
+            <div>
               Name
             </div>
             <div>
@@ -56,7 +59,7 @@ export default function ClassPage() {
               Investment
             </div>
             <div>
-              Actions
+              Remove 
             </div>
           </div>
         </div>
@@ -66,6 +69,16 @@ export default function ClassPage() {
               className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2"
               key={enrollment.id}
             >
+              <div>
+                <button
+                  className="bg-blue-400 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                  onClick={() => {
+                    toast("Pay")
+                  }}
+                >
+                  Pay
+                </button>
+              </div>
               <div>
                 {enrollment.firstName} {enrollment.lastName}
               </div>
@@ -83,7 +96,7 @@ export default function ClassPage() {
               </div>
               <div>
                 <button
-                  className="bg-slate-400 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                  className="bg-red-400 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
                   disabled={deleteIsLoading}
                   onClick={() => {
                     deleteEnrollment({ id: enrollment.id })
