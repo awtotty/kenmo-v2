@@ -50,9 +50,9 @@ export const ClassCard = ({ enrollment, numTransactions = 5 }: { enrollment: Enr
               <div className="text-left">
                 {enrollment.className}
               </div>
-              <div className="text-left">
+              {/* <div className="text-left">
                 {enrollment.role}
-              </div>
+              </div> */}
             </div>
             <div className="flex-grow"></div>
             <div className="float-right">
