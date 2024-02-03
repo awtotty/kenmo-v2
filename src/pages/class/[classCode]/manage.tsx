@@ -6,6 +6,37 @@ import { PageLayout } from "~/components/layout";
 import { api } from "~/utils/api";
 
 
+const TransactionFeed = (prop: { classCode: string }) => {
+  const { data: transactions, isLoading } = api.transaction.getAllByClassCode.useQuery(prop.classCode);
+
+  if (isLoading) return <div>Loading...</div>;
+
+  if (!transactions || transactions.length == 0) return <div>No transactions found.</div>;
+
+  return (
+    <>
+      <div className="flex flex-col justify-center w-full md: max-w-2xl items-center gap-4">
+        {transactions?.map((transaction) => (
+          <div
+            key={transaction.id}
+            className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2"
+          >
+            <div>
+              ${transaction.amount}
+            </div>
+            <div>
+              {transaction.fromAccountId} {"=>"} {transaction.toAccountId}
+            </div>
+            <div>
+              {transaction.createdAt.toTimeString()}
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 export default function ClassPage() {
   const apiUtils = api.useUtils();
   const router = useRouter()
@@ -23,6 +54,7 @@ export default function ClassPage() {
     onSuccess: () => {
       toast.success("Transaction created");
       apiUtils.enrollment.getAllByClassCode.invalidate();
+      apiUtils.transaction.getAllByClassCode.invalidate();
     },
     onError: (error) => {
       toast.error("Could not create transaction");
@@ -145,6 +177,10 @@ export default function ClassPage() {
           ))}
         </div>
 
+
+        <div>
+          <TransactionFeed classCode={classCode} />
+        </div>
       </PageLayout>
     </>
   );

@@ -127,27 +127,26 @@ const CreateClass = () => {
   )
 };
 
-
-const InterestTestButton = () => {
-  const { mutateAsync: interestTest, isLoading } = api.transaction.testInterest.useMutation({
-    onSuccess(data, variables, context) {
-      toast.success(`Interest test successful!`)
-    }
-  });
-  return (
-    <>
-      <div>
-        <button
-          onClick={() => {
-            interestTest();
-          }}
-        >
-          Interest Test
-        </button>
-      </div >
-    </>
-  );
-};
+// const InterestTestButton = () => {
+//   const { mutateAsync: interestTest, isLoading } = api.transaction.testInterest.useMutation({
+//     onSuccess(data, variables, context) {
+//       toast.success(`Interest test successful!`)
+//     }
+//   });
+//   return (
+//     <>
+//       <div>
+//         <button
+//           onClick={() => {
+//             interestTest();
+//           }}
+//         >
+//           Interest Test
+//         </button>
+//       </div >
+//     </>
+//   );
+// };
 
 export default function Home() {
   return (
@@ -162,7 +161,7 @@ export default function Home() {
 
         <JoinClass />
         <CreateClass />
-        <InterestTestButton />
+        {/* <InterestTestButton /> */}
       </PageLayout>
     </>
   );
