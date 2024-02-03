@@ -5,7 +5,7 @@ export const config = {
   runtime: 'edge',
 }
 
-export default async function apply_interest(req: NextRequest, res: NextResponse) {
+export default async function apply_interest() {
   const prisma = new PrismaClient()
   const accounts = await prisma.account.findMany()
   accounts.forEach(async account => {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import apply_interest from "~/server/api/cron/interest";
 
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { TRPCClientError } from "@trpc/client";
@@ -77,6 +78,12 @@ export const transactionRouter = createTRPCRouter({
       throw new TRPCClientError("Failed to update to account balance");
     }
 
-    return true;  
+    return true;
   }),
+
+  // testInterest: publicProcedure
+  //   .mutation(async ({ ctx }) => {
+  //     apply_interest();
+  //     console.log("ran interest func");
+  //   }),
 });
