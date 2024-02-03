@@ -28,17 +28,14 @@ export default function ClassPage() {
       toast.error("Could not create transaction");
     }
   });
-  const userAccounts = api.account.getAllByClassCode.useQuery({ classCode });
 
   if (!classCode) return <div>Loading...</div>;
   if (typeof classCode !== "string") return <div>Invalid class code</div>;
-
+  const userAccounts = api.account.getAllByClassCode.useQuery({ classCode });
   const classInfo = api.class.getByClassCode.useQuery({ classCode });
-
   const { data: enrollments, isLoading } = api.enrollment.getAllByClassCode.useQuery({ classCode });
   if (isLoading) return <div>Loading...</div>;
   if (!enrollments || enrollments.length == 0) return <div>No enrollments found.</div>;
-
 
   return (
     <>
