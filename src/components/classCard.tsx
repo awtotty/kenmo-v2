@@ -57,10 +57,10 @@ export const ClassCard = ({ enrollment, numTransactions = 5 }: { enrollment: Enr
             <div className="flex-grow"></div>
             <div className="float-right">
               <div>
-                Checking: {enrollment.checkingAccountBalance ?? "?"}
+                Checking: {enrollment.checkingAccountBalance || enrollment.checkingAccountBalance == 0 ? `$${enrollment.checkingAccountBalance}` : "-"}
               </div>
               <div>
-                Investment: {enrollment.investmentAccountBalance ?? "?"}
+                Investment: {enrollment.investmentAccountBalance || enrollment.investmentAccountBalance == 0 ? `$${enrollment.investmentAccountBalance}` : "-"}
               </div>
               <div>
                 <Link href={`/class/${enrollment.classCode}/transfer`}>

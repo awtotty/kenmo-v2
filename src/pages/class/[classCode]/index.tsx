@@ -76,10 +76,10 @@ export default function ClassPage() {
                 {enrollment.role}
               </div>
               <div>
-                {enrollment.checkingAccountBalance ?? "?"}
+                {enrollment.checkingAccountBalance || enrollment.checkingAccountBalance == 0 ? `$${enrollment.checkingAccountBalance}` : "-"}
               </div>
               <div>
-                {enrollment.investmentAccountBalance ?? "?"}
+                {enrollment.investmentAccountBalance || enrollment.investmentAccountBalance == 0 ? `$${enrollment.investmentAccountBalance}` : "-"}
               </div>
               <div>
                 <button
