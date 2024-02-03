@@ -41,9 +41,6 @@ export const ClassCard = ({ enrollment, numTransactions = 5 }: { enrollment: Enr
   }
 
   else if (enrollment.role === ROLE.STUDENT) {
-    const checkingAccount = api.account.getById.useQuery({ accountId: enrollment.checkingAccountId }).data;
-    const investmentAccount = api.account.getById.useQuery({ accountId: enrollment.investmentAccountId }).data;
-
     return (
       <>
         <div className="items-center w-full md:max-w-2xl" key={enrollment.id}>
@@ -60,10 +57,10 @@ export const ClassCard = ({ enrollment, numTransactions = 5 }: { enrollment: Enr
             <div className="flex-grow"></div>
             <div className="float-right">
               <div>
-                Checking: {checkingAccount?.balance}
+                Checking: {enrollment.checkingAccountBalance ?? "?"}
               </div>
               <div>
-                Investment: {investmentAccount?.balance}
+                Investment: {enrollment.investmentAccountBalance ?? "?"}
               </div>
             </div>
           </div>

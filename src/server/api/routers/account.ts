@@ -5,6 +5,32 @@ import { TRPCClientError } from "@trpc/client";
 
 
 export const accountRouter = createTRPCRouter({
+  // update: protectedProcedure
+  //   .input(z.object({
+  //     accountId: z.number().int(),
+  //     balance: z.number().optional(),
+  //     interestRate: z.number().optional(),
+  //     interestPeriodDays: z.number().optional(),
+  //   }))
+  //   .mutation(async ({ ctx, input }) => {
+  //     if (!ctx.auth?.userId) {
+  //       throw new TRPCClientError("You must be logged in to update an account")
+  //     }
+
+  //     const updatedAccount = await ctx.db.account.update({
+  //       where: {
+  //         id: input.accountId
+  //       },
+  //       data: {
+  //         balance: input.balance,
+  //         interestRate: input.interestRate,
+  //         interestPeriodDays: input.interestPeriodDays,
+  //       }
+  //     })
+
+  //     return updatedAccount
+  //   }),
+
   create: protectedProcedure 
     .input(z.object({
       balance: z.number(),
