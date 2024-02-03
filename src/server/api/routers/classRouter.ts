@@ -149,6 +149,53 @@ export const classRouter = createTRPCRouter({
       return { classCode: classObj.classCode }
     }),
 
+  delete: protectedProcedure
+    .input(z.object({
+      classCode: z.string().length(6),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.auth?.userId) {
+        throw new TRPCClientError("You must be logged in to delete a class")
+      }
+
+      const classObj = await ctx.db.class.findFirst({
+        where: {
+          classCode: input.classCode,
+        }
+      })
+
+      if (!classObj) {
+        throw new TRPCClientError("Class not found")
+      }
+
+      const enrollment = await ctx.db.enrollment.findFirst({
+        where: {
+          userId: ctx.auth.userId,
+          classId: classObj.id,
+          role: "ADMIN",
+        }
+      })
+
+      if (!enrollment) {
+        throw new TRPCClientError("You are not an admin of this class")
+      }
+
+      // delete all enrollments for this class
+      await ctx.db.enrollment.deleteMany({
+        where: {
+          classId: classObj.id,
+        }
+      })
+
+      await ctx.db.class.delete({
+        where: {
+          id: classObj.id,
+        }
+      })
+
+      return { classCode: classObj.classCode }
+    }),
+
   getByClassCode: protectedProcedure
     .input(z.object({
       classCode: z.string().length(6),

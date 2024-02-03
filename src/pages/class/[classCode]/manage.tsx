@@ -60,6 +60,15 @@ export default function ClassPage() {
       toast.error("Could not create transaction");
     }
   });
+  const { mutateAsync: deleteClass, isLoading: deleteClassIsLoading } = api.class.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Class deleted");
+      router.push("/");
+    },
+    onError: (error) => {
+      toast.error("Could not delete class");
+    }
+  });
 
   if (!classCode) return <div>Loading...</div>;
   if (typeof classCode !== "string") return <div>Invalid class code</div>;
@@ -177,9 +186,18 @@ export default function ClassPage() {
           ))}
         </div>
 
-
         <div>
           <TransactionFeed classCode={classCode} />
+        </div>
+
+        <div>
+          <button
+            className="bg-red-400 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+            disabled={deleteClassIsLoading}
+            onClick={() => {
+              deleteClass({ classCode })
+            }}
+          >Delete Class</button>
         </div>
       </PageLayout>
     </>
