@@ -62,6 +62,13 @@ export const ClassCard = ({ enrollment, numTransactions = 5 }: { enrollment: Enr
               <div>
                 Investment: {enrollment.investmentAccountBalance ?? "?"}
               </div>
+              <div>
+                <Link href={`/class/${enrollment.classCode}/transfer`}>
+                  <button className="flex bg-slate-500 hover:bg-blue-700 text-white py-0 px-2 rounded">
+                    Transfer
+                  </button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

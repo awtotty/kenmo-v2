@@ -79,4 +79,45 @@ export const accountRouter = createTRPCRouter({
         }
       })
     }),
+
+  getAllByClassCode: protectedProcedure
+    .input(z.object({
+      classCode: z.string()
+    }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.auth?.userId) {
+        throw new TRPCClientError("You must be logged in to view this class")
+      }
+
+      const classObj = await ctx.db.class.findFirst({
+        where: {
+          classCode: input.classCode
+        }
+      })
+
+      if (!classObj) {
+        throw new TRPCClientError("Class not found")
+      }
+
+      const enrollments = await ctx.db.enrollment.findMany({
+        where: {
+          classId: classObj.id,
+          userId: ctx.auth.userId
+        }
+      })
+
+      if (!enrollments) {
+        throw new TRPCClientError("No enrollments found")
+      }
+
+      const accountIds = enrollments.map((enrollment) => enrollment.checkingAccountId).concat(enrollments.map((enrollment) => enrollment.investmentAccountId)) 
+
+      return await ctx.db.account.findMany({
+        where: {
+          id: {
+            in: accountIds
+          }
+        }
+      })
+    }),
 });
