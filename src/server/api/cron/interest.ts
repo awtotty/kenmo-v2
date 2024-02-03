@@ -6,13 +6,8 @@ export const config = {
 }
 
 export default async function apply_interest(req: NextRequest, res: NextResponse) {
-  // connect to the database
   const prisma = new PrismaClient()
-
-  // get all accounts
   const accounts = await prisma.account.findMany()
-
-  // for each account in the database, calculate the interest and update the balance
   accounts.forEach(async account => {
     const interest = account.balance * account.interestRate
     const newBalance = account.balance + interest
