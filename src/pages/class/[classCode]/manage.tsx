@@ -1,3 +1,4 @@
+import { create } from "domain";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
@@ -18,13 +19,26 @@ export default function ClassPage() {
       toast.error("Could not delete enrollment");
     }
   });
+  const { mutateAsync: createTransaction, isLoading: createIsLoading } = api.transaction.create.useMutation({
+    onSuccess: () => {
+      toast.success("Transaction created");
+      apiUtils.enrollment.getAllByClassCode.invalidate();
+    },
+    onError: (error) => {
+      toast.error("Could not create transaction");
+    }
+  });
+  const userAccounts = api.account.getAllByClassCode.useQuery({ classCode });
 
   if (!classCode) return <div>Loading...</div>;
   if (typeof classCode !== "string") return <div>Invalid class code</div>;
 
+  const classInfo = api.class.getByClassCode.useQuery({ classCode });
+
   const { data: enrollments, isLoading } = api.enrollment.getAllByClassCode.useQuery({ classCode });
   if (isLoading) return <div>Loading...</div>;
   if (!enrollments || enrollments.length == 0) return <div>No enrollments found.</div>;
+
 
   return (
     <>
@@ -35,13 +49,19 @@ export default function ClassPage() {
       </Head>
       <PageLayout>
         <div>
+          {classInfo.data?.className}
+        </div>
+        <div>
           Class code: {classCode}
         </div>
         {/* list all enrollments */}
         <div>
           <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2">
             <div>
-              Pay 
+              Amount
+            </div>
+            <div>
+              Transfer
             </div>
             <div>
               Name
@@ -59,7 +79,7 @@ export default function ClassPage() {
               Investment
             </div>
             <div>
-              Remove 
+              Remove
             </div>
           </div>
         </div>
@@ -70,13 +90,34 @@ export default function ClassPage() {
               key={enrollment.id}
             >
               <div>
+                <select
+                  className="bg-white border border-gray-400 rounded px-2 py-1 text-gray-700"
+                  name="amount"
+                  id={`amount-${enrollment.id}`}
+                  defaultValue={5}
+                >
+                  <option value="-20">-$20</option>
+                  <option value="-10">-$10</option>
+                  <option value="-5">-$5</option>
+                  <option value="5">$5</option>
+                  <option value="10">$10</option>
+                  <option value="20">$20</option>
+                </select>
+              </div>
+              <div>
                 <button
                   className="bg-blue-400 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                  disabled={createIsLoading}
                   onClick={() => {
-                    toast("Pay")
+                    // use the value of the select to create a transaction
+                    createTransaction({
+                      amount: parseInt((document.getElementById(`amount-${enrollment.id}`) as HTMLSelectElement).value),
+                      fromAccountId: userAccounts.data?.[0]?.id ?? -1,
+                      toAccountId: enrollment.checkingAccountId ?? -1,
+                    })
                   }}
                 >
-                  Pay
+                  Transfer
                 </button>
               </div>
               <div>

@@ -39,29 +39,50 @@ export const classRouter = createTRPCRouter({
         code = Math.random().toString(36).substring(2, 8).toUpperCase()
       }
 
-      const newClass = await ctx.db.class.create({
+      const classObj = await ctx.db.class.create({
         data: {
           name: input?.className,
           classCode: code,
         }
       })
 
-      if (!newClass) {
+      if (!classObj) {
         throw new TRPCClientError("Failed to create class")
       }
+
+      // create two new accounts: one for investment and one for checking
+      const investmentAccount = await ctx.db.account.create({
+        data: {
+          ownerId: ctx.auth.userId,
+          balance: 1000000,
+          interestRate: 0.00, 
+          interestPeriodDays: 1,
+          name: `Investment (${classObj.name})`,
+        }
+      })
+
+      const checkingAccount = await ctx.db.account.create({
+        data: {
+          ownerId: ctx.auth.userId,
+          balance: 1000000,
+          interestRate: 0.00,
+          interestPeriodDays: -1,
+          name: `Checking (${classObj.name})`,
+        }
+      })
 
       // enroll the user as an admin for the class
       const enrollmentCreated = await ctx.db.enrollment.create({
         data: {
           userId: ctx.auth.userId,
-          classId: newClass.id,
+          classId: classObj.id,
           role: "ADMIN",
-          investmentAccountId: -1,
-          checkingAccountId: -1,
+          investmentAccountId: investmentAccount.id,
+          checkingAccountId: checkingAccount.id,
         }
       })
 
-      return { classCode: newClass.classCode };
+      return { classCode: classObj.classCode };
     }),
 
   join: protectedProcedure
@@ -100,7 +121,7 @@ export const classRouter = createTRPCRouter({
           ownerId: ctx.auth.userId,
           balance: 0,
           interestRate: 0.01, // TODO: make this a param in class creation
-          interestPeriodDays: 1, 
+          interestPeriodDays: 1,
           name: `Investment (${classObj.name})`,
         }
       })
@@ -110,7 +131,7 @@ export const classRouter = createTRPCRouter({
           ownerId: ctx.auth.userId,
           balance: 100, // TODO: make this a param in class creation
           interestRate: 0.00,
-          interestPeriodDays: -1, 
+          interestPeriodDays: -1,
           name: `Checking (${classObj.name})`,
         }
       })
@@ -128,5 +149,21 @@ export const classRouter = createTRPCRouter({
       return { classCode: classObj.classCode }
     }),
 
+  getByClassCode: protectedProcedure
+    .input(z.object({
+      classCode: z.string().length(6),
+    }))
+    .query(async ({ ctx, input }) => {
+      const classObj = await ctx.db.class.findFirst({
+        where: {
+          classCode: input.classCode,
+        }
+      })
 
+      if (!classObj) {
+        throw new TRPCClientError("Class not found")
+      }
+
+      return { className: classObj.name, classCode: classObj.classCode };
+    }),
 });

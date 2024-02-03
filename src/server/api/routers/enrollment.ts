@@ -37,6 +37,7 @@ const cleanEnrollmentForClient = async (enrollment: Enrollment) => {
     classCode: classObj?.classCode,
     investmentAccountBalance: investmentAccount?.balance,
     checkingAccountBalance: checkingAccount?.balance,
+    checkingAccountId: checkingAccount?.id,
   }
 }
 
