@@ -13,59 +13,15 @@
   - Lots of searching produced no guidance, but ChatGPT worked really quickly
 - Double-entry bookeeping is preferred.
   - I scrapped a lot of the early work on transactions that approached bookeeping as single-entry. 
-
-# Build notes
-1. Production setup and db schema planning (1.5 hr)
-1. Account management with Clerk (0.5 hr)
-1. Cash logic and basic home page (2 hr)
-1. Enrollment logic and account cards on home page (3 hr)
-1. Single account page and dynamic routing for classes (2 hr)
-1. Class creation and management (3 hr)
-1. 
-
-
-# Planning notes
-## Data structures  
-User: 
-  - userId 
-  - enrollments: List(enrollmentId)
-  - transactions: List(transactionId)
-  - cash: float
-
-Enrollment: 
-  - enrollmentId
-  - userId (foreign)
-  - classId (foreign)
-  - role: enum(teacher, student)
-  - bankBalance: float
-  - bankInterest: float
-
-Class: 
-  - classId
-  - name: string
-  - enrollments: List(enrollmentId)
-
-Transaction: 
-  - transactionId
-  - from: userId  
-  - to: userId
-  - amount: float
-  - date: datetime
-  - note: string
-
-CustomTransaction: 
-  - customTransactionId
-  - user
-  - amount: float
-
-## Tasks
-1. Set up database 
-1. User managment with Clerk
-1. Class management
-1. Transactions
-1. Interest
-1. Custom transactions
-1. UI
+- Having a story map is extremely helpful, even if it's really basic. 
+  - I took some time off from developing this due to limited available time. Coming back and picking up 
+  where I left off was made a lot easier by referring to the list of user stories completed and outstanding. 
+  - This was the story map I used: https://www.figma.com/file/xsd4GCVLP0me0inkLf2bOi/kenmo-stories-and-flows?type=whiteboard&node-id=0-1&t=tQeFmBktWzRjq9VR-0
+  - Note that the story map is mostly just a list of user stories, not even prioritized.  
+- Cron jobs are easy in Vercel now!
+  - It's super easy to set a schedule and a routine to run. 
+  - https://vercel.com/blog/cron-jobs 
+  - This was used for interest calculations on investment accounts (well, actually all accounts)
 
 
 # Create T3 App
