@@ -10,6 +10,7 @@ export const transactionRouter = createTRPCRouter({
       fromAccountId: z.number(),
       toAccountId: z.number(),
       amount: z.number(),
+      note: z.string().optional(),
     }),
   ).mutation(async ({ ctx, input }) => {
     // verify that the user owns the from account
@@ -78,12 +79,22 @@ export const transactionRouter = createTRPCRouter({
       throw new TRPCClientError("Failed to update to account balance");
     }
 
+    if (input.amount !== 0) {
+      const transaction = await ctx.db.transaction.create({
+        data: {
+          fromAccountId: input.fromAccountId,
+          toAccountId: input.toAccountId,
+          amount: input.amount,
+          note: input.note ?? "",
+        },
+      });
+    }
     return true;
   }),
 
-  // testInterest: publicProcedure
-  //   .mutation(async ({ ctx }) => {
-  //     apply_interest();
-  //     console.log("ran interest func");
-  //   }),
+  testInterest: publicProcedure
+    .mutation(async ({ ctx }) => {
+      apply_interest();
+      console.log("ran interest func");
+    }),
 });

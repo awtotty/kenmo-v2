@@ -22,6 +22,9 @@
   - It's super easy to set a schedule and a routine to run. 
   - https://vercel.com/blog/cron-jobs 
   - This was used for interest calculations on investment accounts (well, actually all accounts)
+- React hook rules are confusing and not well documented
+  - The errors produced when these rules are broken are frustrating and challenging to debug. 
+  - Often these errors appear at unexpected times. 
 
 
 # Create T3 App

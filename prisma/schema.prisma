@@ -54,12 +54,12 @@ model Ledger {
 }
 
 model Transaction {
-  id        Int      @id @default(autoincrement())
-  from      String
-  to        String
-  amount    Float
-  createdAt DateTime @default(now())
-  note      String
+  id            Int      @id @default(autoincrement())
+  fromAccountId Int
+  toAccountId   Int
+  amount        Float
+  createdAt     DateTime @default(now())
+  note          String
 }
 
 model CustomTransaction {

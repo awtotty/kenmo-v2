@@ -15,5 +15,15 @@ export default async function apply_interest() {
       where: { id: account.id },
       data: { balance: newBalance }
     })
+    if (interest !== 0) {
+      await prisma.transaction.create({
+        data: {
+          fromAccountId: account.id,
+          toAccountId: account.id,
+          amount: interest,
+          note: "Interest"
+        }
+      })
+    }
   })
 }
