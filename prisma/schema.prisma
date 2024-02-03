@@ -14,6 +14,7 @@ model Account {
   balance            Float
   interestRate       Float
   interestPeriodDays Float
+  name               String?
   Ledger             Ledger[]
 
   @@index([ownerId])
@@ -24,9 +25,9 @@ model Enrollment {
   userId              String
   classId             Int
   role                Role
-  class               Class  @relation(fields: [classId], references: [id])
   investmentAccountId Int
   checkingAccountId   Int
+  class               Class  @relation(fields: [classId], references: [id])
 
   @@index([id])
 }
@@ -44,10 +45,10 @@ model Class {
 model Ledger {
   id        Int      @id @default(autoincrement())
   accountId Int
-  account   Account  @relation(fields: [accountId], references: [id])
   debit     Float
   credit    Float
   datetime  DateTime @default(now())
+  account   Account  @relation(fields: [accountId], references: [id])
 
   @@index([id])
 }
@@ -64,8 +65,8 @@ model Transaction {
 model CustomTransaction {
   id      Int    @id @default(autoincrement())
   amount  String
-  Class   Class? @relation(fields: [classId], references: [id])
   classId Int?
+  Class   Class? @relation(fields: [classId], references: [id])
 }
 
 enum Role {

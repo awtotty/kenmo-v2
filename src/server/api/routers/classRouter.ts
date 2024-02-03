@@ -99,17 +99,19 @@ export const classRouter = createTRPCRouter({
         data: {
           ownerId: ctx.auth.userId,
           balance: 0,
-          interestRate: 0.01,
+          interestRate: 0.01, // TODO: make this a param in class creation
           interestPeriodDays: 1, 
+          name: `Investment (${classObj.name})`,
         }
       })
 
       const checkingAccount = await ctx.db.account.create({
         data: {
           ownerId: ctx.auth.userId,
-          balance: 100,
+          balance: 100, // TODO: make this a param in class creation
           interestRate: 0.00,
           interestPeriodDays: -1, 
+          name: `Checking (${classObj.name})`,
         }
       })
 

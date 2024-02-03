@@ -74,7 +74,7 @@ export default function ClassPage() {
             >
               <option value="">Select an account</option>
               {fromItems.map((item) => (
-                <option key={item.id} value={item.id}>{`${item.id} ($${item.balance})`}</option>
+                <option key={item.id} value={item.id}>{`${item.name} ($${item.balance})`}</option>
               ))}
             </select>
           </div>
@@ -88,7 +88,7 @@ export default function ClassPage() {
             >
               <option value="">Select an account</option>
               {toItems.map((item) => (
-                <option key={item.id} value={item.id}>{`${item.id} ($${item.balance})`}</option>
+                <option key={item.id} value={item.id}>{`${item.name} ($${item.balance})`}</option>
               ))}
             </select>
           </div>
