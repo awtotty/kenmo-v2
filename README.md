@@ -25,6 +25,10 @@
 - React hook rules are confusing and not well documented
   - The errors produced when these rules are broken are frustrating and challenging to debug. 
   - Often these errors appear at unexpected times. 
+- I'm not very good at API design. 
+  - Throughout the development of this app, my approach to the API was very ad-hoc. As I needed functions, I wrote them. 
+  - The result is an API that isn't coherent or elegant. 
+  - More deliberate practice on API design is a good idea. 
 
 
 # Create T3 App
