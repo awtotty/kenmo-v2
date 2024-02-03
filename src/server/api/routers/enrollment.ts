@@ -12,7 +12,7 @@ const cleanEnrollmentForClient = async (enrollment: Enrollment) => {
       id: enrollment.classId
     }
   });
-  
+
   const user = await clerkClient.users.getUser(enrollment.userId)
 
   const investmentAccount = await db.account.findFirst({
@@ -94,5 +94,42 @@ export const enrollmentRouter = createTRPCRouter({
       return await Promise.all(
         enrollments.map(async (enrollment) => await cleanEnrollmentForClient(enrollment))
       );
+    }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const enrollment = await ctx.db.enrollment.findFirst({
+        where: {
+          id: input.id
+        }
+      });
+
+      if (!enrollment) {
+        throw new Error("Enrollment not found");
+      }
+
+      const adminIds = await ctx.db.enrollment.findMany({
+        where: {
+          classId: enrollment.classId,
+          role: "ADMIN"
+        }
+      });
+
+      if (!adminIds.map((enrollment) => enrollment.userId).includes(ctx.auth?.userId!)) {
+        throw new Error("You are not an admin of this class");
+      }
+
+      const deletedEnrollment = await ctx.db.enrollment.delete({
+        where: {
+          id: input.id
+        }
+      });
+
+      if (!deletedEnrollment) {
+        throw new Error("Failed to delete enrollment");
+      }
+
+      return deletedEnrollment;
     }),
 });

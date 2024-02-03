@@ -1,12 +1,24 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
+import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
 import { api } from "~/utils/api";
 
-export default function ClassPage() {
-  const router = useRouter()
 
+export default function ClassPage() {
+  const apiUtils = api.useUtils();
+  const router = useRouter()
   const classCode = router.query.classCode;
+  const { mutateAsync: deleteEnrollment, isLoading: deleteIsLoading } = api.enrollment.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Enrollment deleted");
+      apiUtils.enrollment.getAllByClassCode.invalidate();
+    },
+    onError: (error) => {
+      toast.error("Could not delete enrollment");
+    }
+  });
+
   if (!classCode) return <div>Loading...</div>;
   if (typeof classCode !== "string") return <div>Invalid class code</div>;
 
@@ -26,7 +38,7 @@ export default function ClassPage() {
           Class code: {classCode}
         </div>
         {/* list all enrollments */}
-        <div> 
+        <div>
           <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2">
             <div>
               Name
@@ -42,6 +54,9 @@ export default function ClassPage() {
             </div>
             <div>
               Investment
+            </div>
+            <div>
+              Actions
             </div>
           </div>
         </div>
@@ -65,6 +80,15 @@ export default function ClassPage() {
               </div>
               <div>
                 {enrollment.investmentAccountBalance ?? "?"}
+              </div>
+              <div>
+                <button
+                  className="bg-slate-400 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
+                  disabled={deleteIsLoading}
+                  onClick={() => {
+                    deleteEnrollment({ id: enrollment.id })
+                  }}
+                >Remove</button>
               </div>
             </div>
           ))}
