@@ -21,6 +21,9 @@ export const transactionRouter = createTRPCRouter({
     if (!fromAccount) {
       throw new TRPCClientError("You do not own the from account");
     }
+    if (fromAccount.balance < input.amount) {
+      throw new TRPCClientError("Insufficient funds");
+    }
 
     const toAccount = await ctx.db.account.findFirst({
       where: {

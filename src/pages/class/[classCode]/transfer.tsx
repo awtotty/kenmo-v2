@@ -1,3 +1,4 @@
+import { TRPCClientError } from "@trpc/client";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { parse } from "path";
@@ -41,7 +42,12 @@ export default function ClassPage() {
       toast.success(`Transaction complete`)
     },
     onError: (error) => {
-      toast.error(`Transaction failed. Try again later.`)
+      if (error instanceof TRPCClientError) {
+        toast.error(`Transaction failed: ${error.message}`)
+      }
+      else {
+        toast.error(`Transaction failed. Try again later.`)
+      }
     }
   })
 
@@ -107,7 +113,7 @@ export default function ClassPage() {
                   setAmountInput("0.00");
                 } catch (e) {
                 }
-              }}>Create</button>
+              }}>Transfer</button>
           </div>
         </div>
       </PageLayout>
