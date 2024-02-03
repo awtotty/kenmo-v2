@@ -12,7 +12,10 @@ export const Nav = () => {
             <a className="text-blue-500 hover:text-blue-800" href="/">Home</a>
           </li>
           <li className="mr-6">
-            <a className="text-gray-400 cursor-not-allowed" href="#">Shop</a>
+            <a className="text-gray-400 cursor-not-allowed" href="#">Activity</a>
+          </li>
+          <li className="mr-6">
+            <a className="text-blue-500 hover:text-blue-800" href="/join">Join</a>
           </li>
         </ul>
         <div className="flex-grow"></div>
