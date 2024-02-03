@@ -15,6 +15,9 @@ const TransactionFeed = (prop: { classCode: string }) => {
 
   return (
     <>
+          <div className="flex flex-col text-center gap-4 border-b-2 border-gray-200 my-2">
+        Recent Transactions
+      </div>
       <div className="flex flex-col justify-center w-full md: max-w-2xl items-center gap-4">
         {transactions?.map((transaction) => (
           <div

@@ -35,7 +35,7 @@ export default function ClassPage() {
       setToItems(accounts);
     }
   }, [accounts]);
-
+  const classInfo = api.class.getByClassCode.useQuery({ classCode });
 
   const { mutateAsync: createTransaction, isLoading } = api.transaction.create.useMutation({
     onSuccess: async (output) => {
@@ -60,7 +60,10 @@ export default function ClassPage() {
       </Head>
       <PageLayout>
         <div>
-          Class code: {classCode}
+          {classInfo.data?.className}
+        </div>
+        <div>
+          {`Class Code: ${classCode}`}
         </div>
 
         <div className="flex-col">
