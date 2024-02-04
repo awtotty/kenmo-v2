@@ -12,21 +12,24 @@ type Account = RouterOutputs["account"]["getAllByClassCode"][0];
 
 export default function ClassPage() {
   const router = useRouter()
-
-  // tRPC hook for state invalidation and other things
   const apiUtils = api.useUtils();
-
-  const classCode = router.query.classCode;
-  if (!classCode) return <div>Loading...</div>;
-  if (typeof classCode !== "string") return <div>Invalid class code</div>;
-
-  // input field for class code
+  const classCode = typeof router.query.classCode === "string" ? router.query.classCode : "";
+  const [loadingState, setLoadingState] = useState<'loading' | 'invalidClassCode' | 'loaded'>('loading');
   const [fromItems, setFromItems] = useState<Account[]>([]);
   const [toItems, setToItems] = useState<Account[]>([]);
   const [fromSelectedItem, setFromSelectedItem] = useState("");
   const [toSelectedItem, setToSelectedItem] = useState("");
   const [amountInput, setAmountInput] = useState("0.00");
 
+  useEffect(() => {
+    if (!classCode) {
+      setLoadingState('invalidClassCode');
+    } else {
+      setLoadingState('loaded');
+    }
+  }, [classCode]);
+
+  const classInfo = api.class.getByClassCode.useQuery({ classCode });
   // query the accounts with this class code and set the fromItems and toItems
   const { data: accounts, isLoading: accountsLoading } = api.account.getAllByClassCode.useQuery({ classCode });
   useEffect(() => {
@@ -35,8 +38,6 @@ export default function ClassPage() {
       setToItems(accounts);
     }
   }, [accounts]);
-  const classInfo = api.class.getByClassCode.useQuery({ classCode });
-
   const { mutateAsync: createTransaction, isLoading } = api.transaction.create.useMutation({
     onSuccess: async (output) => {
       toast.success(`Transaction complete`)
@@ -50,6 +51,8 @@ export default function ClassPage() {
       }
     }
   })
+
+  if (loadingState === "loading") return <div>Loading...</div>;
 
   return (
     <>

@@ -1,6 +1,7 @@
 import { create } from "domain";
 import Head from "next/head";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
 import { api } from "~/utils/api";
@@ -8,9 +9,7 @@ import { api } from "~/utils/api";
 
 const TransactionFeed = (prop: { classCode: string }) => {
   const { data: transactions, isLoading } = api.transaction.getAllByClassCode.useQuery(prop.classCode);
-
   if (isLoading) return <div>Loading...</div>;
-
   if (!transactions || transactions.length == 0) return <div>No transactions found.</div>;
 
   return (
@@ -43,7 +42,28 @@ const TransactionFeed = (prop: { classCode: string }) => {
 export default function ClassPage() {
   const apiUtils = api.useUtils();
   const router = useRouter()
-  const classCode = router.query.classCode;
+  const classCode = typeof router.query.classCode === "string" ? router.query.classCode : "";
+  const [loadingState, setLoadingState] = useState<'loading' | 'invalidClassCode' | 'invalidEnrollments' | 'loaded'>('loading');
+  const { data: enrollments, isLoading } = api.enrollment.getAllByClassCode.useQuery({ classCode });
+  const userAccounts = api.account.getAllByClassCode.useQuery({ classCode });
+  const classInfo = api.class.getByClassCode.useQuery({ classCode });
+
+  useEffect(() => {
+    if (!classCode) {
+      setLoadingState('invalidClassCode');
+    } else {
+      setLoadingState('loaded');
+    }
+  }, [classCode]);
+
+  useEffect(() => {
+    if (!enrollments || enrollments.length == 0) {
+      setLoadingState('invalidEnrollments');
+    } else {
+      setLoadingState('loaded');
+    }
+  }, [enrollments]);
+
   const { mutateAsync: deleteEnrollment, isLoading: deleteIsLoading } = api.enrollment.delete.useMutation({
     onSuccess: () => {
       toast.success("Enrollment deleted");
@@ -73,13 +93,7 @@ export default function ClassPage() {
     }
   });
 
-  if (!classCode) return <div>Loading...</div>;
-  if (typeof classCode !== "string") return <div>Invalid class code</div>;
-  const userAccounts = api.account.getAllByClassCode.useQuery({ classCode });
-  const classInfo = api.class.getByClassCode.useQuery({ classCode });
-  const { data: enrollments, isLoading } = api.enrollment.getAllByClassCode.useQuery({ classCode });
-  if (isLoading) return <div>Loading...</div>;
-  if (!enrollments || enrollments.length == 0) return <div>No enrollments found.</div>;
+  if (loadingState === "loading") return <div>Loading...</div>;
 
   return (
     <>
