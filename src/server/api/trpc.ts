@@ -2,7 +2,6 @@
  * Taken from https://github.com/perkinsjr/t3-app-clerk-minimal/blob/main/src/server/api/trpc.ts
  */
 
-
 /**
  * YOU PROBABLY DON'T NEED TO EDIT THIS FILE, UNLESS:
  * 1. You want to modify request context (see Part 1)
@@ -23,7 +22,10 @@
  */
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 import { getAuth } from "@clerk/nextjs/server";
-import type { SignedInAuthObject, SignedOutAuthObject } from "@clerk/nextjs/api";
+import type {
+  SignedInAuthObject,
+  SignedOutAuthObject,
+} from "@clerk/nextjs/api";
 
 import { db } from "../db";
 
@@ -39,7 +41,7 @@ interface AuthContext {
  * - trpc's `createSSGHelpers` where we don't have req/res
  * @see https://create.t3.gg/en/usage/trpc#-servertrpccontextts
  */
-const createInnerTRPCContext = ({ auth }: AuthContext  ) => {
+const createInnerTRPCContext = ({ auth }: AuthContext) => {
   return {
     auth,
     db,
@@ -74,7 +76,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
       data: {
         ...shape.data,
         zodError:
-          error.code === 'BAD_REQUEST' && error.cause instanceof ZodError
+          error.code === "BAD_REQUEST" && error.cause instanceof ZodError
             ? error.cause.flatten()
             : null,
       },

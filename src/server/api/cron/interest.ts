@@ -1,29 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { NextRequest, NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
 
 export const config = {
-  runtime: 'edge',
-}
+  runtime: "edge",
+};
 
 export default async function apply_interest() {
-  const prisma = new PrismaClient()
-  const accounts = await prisma.account.findMany()
-  accounts.forEach(async account => {
-    const interest = account.balance * account.interestRate
-    const newBalance = account.balance + interest
+  const prisma = new PrismaClient();
+  const accounts = await prisma.account.findMany();
+  accounts.forEach(async (account) => {
+    const interest = account.balance * account.interestRate;
+    const newBalance = account.balance + interest;
     await prisma.account.update({
       where: { id: account.id },
-      data: { balance: newBalance }
-    })
+      data: { balance: newBalance },
+    });
     if (interest !== 0) {
       await prisma.transaction.create({
         data: {
           fromAccountId: account.id,
           toAccountId: account.id,
           amount: interest,
-          note: "Interest"
-        }
-      })
+          note: "Interest",
+        },
+      });
     }
-  })
+  });
 }

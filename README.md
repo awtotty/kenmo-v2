@@ -1,35 +1,35 @@
 # Learnings
-- To sync data between Clerk accounts and databases, use Clerk webhooks. 
-  - This was used becuase the User data model is an extnension of the Clerk user. 
+
+- To sync data between Clerk accounts and databases, use Clerk webhooks.
+  - This was used becuase the User data model is an extnension of the Clerk user.
   - The full User model is stored in the database
-  - When users are created, updated, or deleted via Clerk, those changes should be reflected in the db. 
-  - https://clerk.com/docs/users/sync-data 
+  - When users are created, updated, or deleted via Clerk, those changes should be reflected in the db.
+  - https://clerk.com/docs/users/sync-data
 - Be careful with db pushes
-  - I had to repopulate my test data multiple times due to db push creating incompatible tables. 
-  - If you get a warning the db will be cleared, consider a different solution. 
+  - I had to repopulate my test data multiple times due to db push creating incompatible tables.
+  - If you get a warning the db will be cleared, consider a different solution.
   - In the future, I would like to automate test data generation
 - `Promise.all` is required when map involves an async function
   - ChatGPT provided the answer to this immediately after giving the two source files and the error
   - Lots of searching produced no guidance, but ChatGPT worked really quickly
 - Double-entry bookeeping is preferred.
-  - I scrapped a lot of the early work on transactions that approached bookeeping as single-entry. 
-- Having a story map is extremely helpful, even if it's really basic. 
-  - I took some time off from developing this due to limited available time. Coming back and picking up 
-  where I left off was made a lot easier by referring to the list of user stories completed and outstanding. 
+  - I scrapped a lot of the early work on transactions that approached bookeeping as single-entry.
+- Having a story map is extremely helpful, even if it's really basic.
+  - I took some time off from developing this due to limited available time. Coming back and picking up
+    where I left off was made a lot easier by referring to the list of user stories completed and outstanding.
   - This was the story map I used: https://www.figma.com/file/xsd4GCVLP0me0inkLf2bOi/kenmo-stories-and-flows?type=whiteboard&node-id=0-1&t=tQeFmBktWzRjq9VR-0
-  - Note that the story map is mostly just a list of user stories, not even prioritized.  
+  - Note that the story map is mostly just a list of user stories, not even prioritized.
 - Cron jobs are easy in Vercel now!
-  - It's super easy to set a schedule and a routine to run. 
-  - https://vercel.com/blog/cron-jobs 
+  - It's super easy to set a schedule and a routine to run.
+  - https://vercel.com/blog/cron-jobs
   - This was used for interest calculations on investment accounts (well, actually all accounts)
 - React hook rules are confusing and not well documented
-  - The errors produced when these rules are broken are frustrating and challenging to debug. 
-  - Often these errors appear at unexpected times. 
-- I'm not very good at API design. 
-  - Throughout the development of this app, my approach to the API was very ad-hoc. As I needed functions, I wrote them. 
-  - The result is an API that isn't coherent or elegant. 
-  - More deliberate practice on API design is a good idea. 
-
+  - The errors produced when these rules are broken are frustrating and challenging to debug.
+  - Often these errors appear at unexpected times.
+- I'm not very good at API design.
+  - Throughout the development of this app, my approach to the API was very ad-hoc. As I needed functions, I wrote them.
+  - The result is an API that isn't coherent or elegant.
+  - More deliberate practice on API design is a good idea.
 
 # Create T3 App
 

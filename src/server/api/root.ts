@@ -14,7 +14,7 @@ export const appRouter = createTRPCRouter({
   // cash: cashRouter,
   account: accountRouter,
   transaction: transactionRouter,
-  enrollment: enrollmentRouter, 
+  enrollment: enrollmentRouter,
   class: classRouter,
 });
 

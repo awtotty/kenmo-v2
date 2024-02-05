@@ -6,22 +6,28 @@ import { PageLayout } from "~/components/layout";
 import { api } from "~/utils/api";
 
 const AccountFeed = () => {
-  const { data: enrollments, isLoading } = api.enrollment.getAllCurrentUser.useQuery();
+  const { data: enrollments, isLoading } =
+    api.enrollment.getAllCurrentUser.useQuery();
 
   if (isLoading) return <div>Loading...</div>;
 
-  if (!enrollments || enrollments.length == 0) return <div>No enrollments found.</div>;
+  if (!enrollments || enrollments.length == 0)
+    return <div>No enrollments found.</div>;
 
   return (
     <>
-      <div className="flex flex-col justify-center w-full md: max-w-2xl items-center gap-4">
+      <div className="md: flex w-full max-w-2xl flex-col items-center justify-center gap-4">
         {enrollments?.map((enrollment) => (
-          <ClassCard enrollment={enrollment} numTransactions={5} key={enrollment.id} />
+          <ClassCard
+            enrollment={enrollment}
+            numTransactions={5}
+            key={enrollment.id}
+          />
         ))}
       </div>
     </>
   );
-}
+};
 
 // const InterestTestButton = () => {
 //   const { mutateAsync: interestTest, isLoading } = api.transaction.testInterest.useMutation({
