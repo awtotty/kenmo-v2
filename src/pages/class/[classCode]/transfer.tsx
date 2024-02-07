@@ -22,6 +22,7 @@ export default function ClassPage() {
   const [fromSelectedItem, setFromSelectedItem] = useState("");
   const [toSelectedItem, setToSelectedItem] = useState("");
   const [amountInput, setAmountInput] = useState("0.00");
+  const [noteInput, setNoteInput] = useState("");
 
   useEffect(() => {
     if (!classCode) {
@@ -113,6 +114,17 @@ export default function ClassPage() {
               disabled={isLoading}
             />
           </div>
+          <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2">
+            Note:
+            <input
+              className="rounded border-2 border-gray-200 text-gray-700"
+              type="text"
+              value={noteInput}
+              placeholder="(Optional)"
+              onChange={(e) => setNoteInput(e.target.value)}
+              disabled={isLoading}
+            />
+          </div>
           <div className="flex flex-row justify-between gap-4 border-gray-200 py-2">
             <button
               className="rounded bg-slate-400 px-4 py-2 font-bold text-white hover:bg-blue-700"
@@ -123,6 +135,7 @@ export default function ClassPage() {
                     fromAccountId: parseInt(fromSelectedItem, 10),
                     toAccountId: parseInt(toSelectedItem, 10),
                     amount: parseFloat(amountInput),
+                    note: noteInput,
                   });
                   apiUtils.account.getAllByClassCode.invalidate({ classCode });
                   setAmountInput("0.00");
