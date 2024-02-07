@@ -6,6 +6,8 @@ import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
 import { api } from "~/utils/api";
 
+type Transaction = { id: number, amount: number; fromAccountId: number; toAccountId: number; note: string };
+
 const TransactionFeed = (prop: { classCode: string }) => {
   const { data: transactions, isLoading } =
     api.transaction.getAllByClassCode.useQuery(prop.classCode);
@@ -29,6 +31,7 @@ const TransactionFeed = (prop: { classCode: string }) => {
               {transaction.fromAccountId} {"=>"} {transaction.toAccountId}
             </div>
             <div>{transaction.createdAt.toTimeString()}</div>
+            <div>{transaction.note}</div>
           </div>
         ))}
       </div>
@@ -37,6 +40,13 @@ const TransactionFeed = (prop: { classCode: string }) => {
 };
 
 export default function ClassPage() {
+  const sampleTransactions = [
+    { id: 1, amount: 5, fromAccountId: -1, toAccountId: -1, note: "Built-in transaction" },
+    { id: 2, amount: -10, fromAccountId: -1, toAccountId: -1, note: "Built-in transaction" },
+    { id: 3, amount: -5, fromAccountId: -1, toAccountId: -1, note: "Built-in transaction" },
+    { id: 4, amount: 10, fromAccountId: -1, toAccountId: -1, note: "Built-in transaction" },
+  ]
+
   const apiUtils = api.useUtils();
   const router = useRouter();
   const classCode =
@@ -46,6 +56,7 @@ export default function ClassPage() {
   >("loading");
   const { data: enrollments, isLoading } =
     api.enrollment.getAllByClassCode.useQuery({ classCode });
+  const [possibleTransactions, setPossibleTransactions] = useState<Transaction[]>(sampleTransactions);
   const userAccounts = api.account.getAllByClassCode.useQuery({ classCode });
   const classInfo = api.class.getByClassCode.useQuery({ classCode });
 
@@ -133,14 +144,11 @@ export default function ClassPage() {
                   className="rounded border border-gray-400 bg-white px-2 py-1 text-gray-700"
                   name="amount"
                   id={`amount-${enrollment.id}`}
-                  defaultValue={5}
+                  defaultValue={possibleTransactions[0]?.id}
                 >
-                  <option value="-20">-$20</option>
-                  <option value="-10">-$10</option>
-                  <option value="-5">-$5</option>
-                  <option value="5">$5</option>
-                  <option value="10">$10</option>
-                  <option value="20">$20</option>
+                {possibleTransactions.map((transaction) => (
+                    <option value={transaction.id}>{`$${transaction.amount} ${transaction.note}` }</option>
+                ))}
                 </select>
               </div>
               <div>
@@ -149,17 +157,16 @@ export default function ClassPage() {
                   disabled={createIsLoading}
                   onClick={() => {
                     // use the value of the select to create a transaction
-                    createTransaction({
-                      amount: parseInt(
-                        (
-                          document.getElementById(
-                            `amount-${enrollment.id}`,
-                          ) as HTMLSelectElement
-                        ).value,
-                      ),
-                      fromAccountId: userAccounts.data?.[0]?.id ?? -1,
-                      toAccountId: enrollment.checkingAccountId ?? -1,
-                    });
+                    const id = parseInt((document.getElementById(`amount-${enrollment.id}`) as HTMLSelectElement).value);
+                    let tempTransaction = possibleTransactions.find((transaction) => transaction.id == id);
+                    if (!tempTransaction) {
+                        toast.error("Could not find transaction");
+                        return;
+                    };
+                    tempTransaction.fromAccountId = userAccounts.data?.[0]?.id ?? -1
+                    tempTransaction.toAccountId = enrollment.checkingAccountId ?? -1
+                    console.log(tempTransaction);
+                    createTransaction(tempTransaction);
                   }}
                 >
                   Transfer
