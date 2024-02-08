@@ -79,10 +79,10 @@ export default function ClassPage() {
 
   useEffect(() => {
     if (customTransactions.data && customTransactions.data.length != 0) {
-      setPossibleTransactions(customTransactions.data.map((transaction) => ({
-        id: transaction.id, // Assuming each transaction has a unique id
+      setPossibleTransactions(customTransactions.data.map((transaction, index) => ({
+        id: possibleTransactions.length + index + 1, 
         amount: transaction.amount,
-        fromAccountId: -1, // Or however you determine these accounts
+        fromAccountId: -1, 
         toAccountId: -1,
         note: transaction.note ?? "",
       })));
