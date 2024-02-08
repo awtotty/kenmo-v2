@@ -195,6 +195,68 @@ export const transactionRouter = createTRPCRouter({
       return transactions;
     }),
 
+  getCustomTransactions: protectedProcedure
+    .query(async ({ ctx }) => {
+      const customTransactions = await ctx.db.customTransaction.findMany({
+        where: {
+          ownerId: ctx.auth.userId,
+        },
+        take: 10,
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      return customTransactions;
+    }),
+
+  createCustomTransaction: protectedProcedure
+    .input(
+      z.object({
+        amount: z.number(),
+        note: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const customTransactionsList = await ctx.db.customTransaction.findMany({
+        where: {
+          ownerId: ctx.auth.userId,
+        },
+      });
+      if (customTransactionsList.length >= 10) {
+        throw new TRPCClientError("You have reached the limit of 10 custom transactions");
+      }
+      const customTransaction = await ctx.db.customTransaction.create({
+        data: {
+          ownerId: ctx.auth.userId,
+          amount: input.amount,
+          note: input.note ?? "",
+        },
+      });
+      return customTransaction;
+    }),
+
+  deleteCustomTransaction: protectedProcedure
+    .input(z.number())
+    .mutation(async ({ ctx, input }) => {
+      const customTransaction = await ctx.db.customTransaction.findFirst({
+        where: {
+          id: input,
+        },
+      });
+      if (!customTransaction) {
+        throw new TRPCClientError("Custom transaction not found");
+      }
+      if (ctx.auth?.userId !== customTransaction.ownerId) {
+        throw new TRPCClientError("You do not own the custom transaction");
+      }
+      await ctx.db.customTransaction.delete({
+        where: {
+          id: input,
+        },
+      });
+      return true;
+    }), 
+
   // testInterest: publicProcedure
   //   .mutation(async ({ ctx }) => {
   //     apply_interest();

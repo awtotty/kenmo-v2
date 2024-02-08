@@ -26,6 +26,11 @@ export const Nav = () => {
         </ul>
         <div className="flex-grow"></div>
         <div className="float-right flex justify-center">
+          <div className="flex justify-center p-1">
+            <a className="text-blue-500 hover:text-blue-800" href="/settings">
+              Settings
+            </a>
+          </div>
           <UserButton afterSignOutUrl="/" />
         </div>
       </div>

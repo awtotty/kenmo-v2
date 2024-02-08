@@ -33,11 +33,10 @@ model Enrollment {
 }
 
 model Class {
-  id                Int                 @id @default(autoincrement())
-  name              String
-  classCode         String              @unique
-  Enrollment        Enrollment[]
-  CustomTransaction CustomTransaction[]
+  id         Int          @id @default(autoincrement())
+  name       String
+  classCode  String       @unique
+  Enrollment Enrollment[]
 
   @@index([id])
 }
@@ -63,10 +62,11 @@ model Transaction {
 }
 
 model CustomTransaction {
-  id      Int    @id @default(autoincrement())
-  amount  String
-  classId Int?
-  Class   Class? @relation(fields: [classId], references: [id])
+  id      Int     @id @default(autoincrement())
+  amount  Float
+  ownerId String
+  note    String?
+  createdAt     DateTime @default(now())
 }
 
 enum Role {
