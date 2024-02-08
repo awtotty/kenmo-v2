@@ -57,6 +57,7 @@ export default function ClassPage() {
   const { data: enrollments, isLoading } =
     api.enrollment.getAllByClassCode.useQuery({ classCode });
   const [possibleTransactions, setPossibleTransactions] = useState<Transaction[]>(sampleTransactions);
+  const customTransactions = api.transaction.getCustomTransactions.useQuery();
   const userAccounts = api.account.getAllByClassCode.useQuery({ classCode });
   const classInfo = api.class.getByClassCode.useQuery({ classCode });
 
@@ -75,6 +76,18 @@ export default function ClassPage() {
       setLoadingState("loaded");
     }
   }, [enrollments]);
+
+  useEffect(() => {
+    if (customTransactions.data && customTransactions.data.length != 0) {
+      setPossibleTransactions(customTransactions.data.map((transaction) => ({
+        id: transaction.id, // Assuming each transaction has a unique id
+        amount: transaction.amount,
+        fromAccountId: -1, // Or however you determine these accounts
+        toAccountId: -1,
+        note: transaction.note ?? "",
+      })));
+    }
+  }, [customTransactions.data]); // Dependency array ensures this runs only when customTransactions.data changes
 
   const { mutateAsync: deleteEnrollment, isLoading: deleteIsLoading } =
     api.enrollment.delete.useMutation({
@@ -146,9 +159,9 @@ export default function ClassPage() {
                   id={`amount-${enrollment.id}`}
                   defaultValue={possibleTransactions[0]?.id}
                 >
-                {possibleTransactions.map((transaction) => (
-                    <option value={transaction.id}>{`$${transaction.amount} ${transaction.note}` }</option>
-                ))}
+                  {possibleTransactions.map((transaction) => (
+                    <option value={transaction.id}>{`$${transaction.amount} ${transaction.note}`}</option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -160,8 +173,8 @@ export default function ClassPage() {
                     const id = parseInt((document.getElementById(`amount-${enrollment.id}`) as HTMLSelectElement).value);
                     let tempTransaction = possibleTransactions.find((transaction) => transaction.id == id);
                     if (!tempTransaction) {
-                        toast.error("Could not find transaction");
-                        return;
+                      toast.error("Could not find transaction");
+                      return;
                     };
                     tempTransaction.fromAccountId = userAccounts.data?.[0]?.id ?? -1
                     tempTransaction.toAccountId = enrollment.checkingAccountId ?? -1
@@ -179,13 +192,13 @@ export default function ClassPage() {
               <div>{enrollment.role}</div>
               <div>
                 {enrollment.checkingAccountBalance ||
-                enrollment.checkingAccountBalance == 0
+                  enrollment.checkingAccountBalance == 0
                   ? `$${enrollment.checkingAccountBalance}`
                   : "-"}
               </div>
               <div>
                 {enrollment.investmentAccountBalance ||
-                enrollment.investmentAccountBalance == 0
+                  enrollment.investmentAccountBalance == 0
                   ? `$${enrollment.investmentAccountBalance}`
                   : "-"}
               </div>
