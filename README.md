@@ -30,6 +30,9 @@
   - Throughout the development of this app, my approach to the API was very ad-hoc. As I needed functions, I wrote them.
   - The result is an API that isn't coherent or elegant.
   - More deliberate practice on API design is a good idea.
+- Sentry for monitoring
+  - We starting using this at work, and it's pretty amazing. 
+  - Allows for high granularity in logs and reports down to the user level. 
 
 # Create T3 App
 

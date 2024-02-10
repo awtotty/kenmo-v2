@@ -1,22 +1,32 @@
-/**
- * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
- * for Docker builds.
- */
+import { withSentryConfig } from "@sentry/nextjs";
+
+// Import your environment variables setup as needed
+// Ensure this is compatible with ESM; you might need to adjust the env.js export if necessary
 await import("./src/env.js");
 
 /** @type {import("next").NextConfig} */
-const config = {
+const nextConfig = {
   reactStrictMode: true,
-
-  /**
-   * If you are using `appDir` then you must comment the below `i18n` config out.
-   *
-   * @see https://github.com/vercel/next.js/issues/41980
-   */
   i18n: {
     locales: ["en"],
     defaultLocale: "en",
   },
+  // Add other Next.js config options here
 };
 
-export default config;
+const sentryWebpackPluginOptions = {
+  silent: true,
+  org: "austin-totty",
+  project: "kenmo",
+  widenClientFileUpload: true,
+  transpileClientSDK: true,
+  tunnelRoute: "/monitoring",
+  hideSourceMaps: true,
+  disableLogger: true,
+  automaticVercelMonitors: true,
+  // Additional Sentry options...
+};
+
+// Note: withSentryConfig is a function that takes a Next.js config and returns an enhanced version of it.
+export default withSentryConfig(nextConfig, sentryWebpackPluginOptions);
+

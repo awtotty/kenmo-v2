@@ -43,3 +43,5 @@ yarn-error.log*
 
 # bun
 bun.lockb
+# Sentry Config File
+.sentryclirc
