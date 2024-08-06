@@ -5,6 +5,30 @@ import { ClassCard } from "~/components/classCard";
 import { PageLayout } from "~/components/layout";
 import { api } from "~/utils/api";
 
+// a new component to show the user's enrollments
+const Enrollments = () => {
+  const { data: enrollments, isLoading } =
+    api.enrollment.getAllCurrentUser.useQuery();
+
+  if (isLoading) return <div>Loading...</div>;
+
+  if (!enrollments || enrollments.length == 0)
+    return <div>No enrollments found.</div>;
+
+  return (
+    <>
+      <div className="md: flex w-full max-w-2xl flex-col items-center justify-center gap-4">
+        {enrollments?.map((enrollment) => (
+          <ClassCard
+            enrollment={enrollment}
+            key={enrollment.id}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
 const AccountFeed = () => {
   const { data: enrollments, isLoading } =
     api.enrollment.getAllCurrentUser.useQuery();
@@ -20,7 +44,6 @@ const AccountFeed = () => {
         {enrollments?.map((enrollment) => (
           <ClassCard
             enrollment={enrollment}
-            numTransactions={5}
             key={enrollment.id}
           />
         ))}
@@ -59,8 +82,9 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <PageLayout>
-        <AccountFeed />
+        // <AccountFeed />
         {/* <InterestTestButton /> */}
+        <Enrollments />
       </PageLayout>
     </>
   );

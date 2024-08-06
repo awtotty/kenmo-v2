@@ -7,10 +7,8 @@ type EnrollmentWithClassInfo =
   RouterOutputs["enrollment"]["getAllCurrentUser"][0];
 export const ClassCard = ({
   enrollment,
-  numTransactions = 5,
 }: {
   enrollment: EnrollmentWithClassInfo;
-  numTransactions: number;
 }) => {
   const userId = useUser().user?.id;
   if (!userId) return <div>Not logged in</div>;
@@ -19,64 +17,46 @@ export const ClassCard = ({
   if (enrollment.role === ROLE.ADMIN) {
     return (
       <>
-        <div className="w-full items-center md:max-w-2xl" key={enrollment.id}>
-          {/* main card body */}
-          <div className="flex w-full items-center border p-4 md:max-w-2xl">
-            <div className="float-left flex-col">
-              <div className="text-left">{enrollment.className}</div>
-              <div className="text-left">{enrollment.role}</div>
-            </div>
-            <div className="flex-grow"></div>
-            <div className="float-right">
-              <div>Class Code: {enrollment.classCode}</div>
-              <Link href={`/class/${enrollment.classCode}/manage`}>
-                <button className="flex rounded bg-slate-500 px-2 py-0 text-white hover:bg-blue-700">
-                  Manage
-                </button>
-              </Link>
-            </div>
+
+        <Link href={`/class/${enrollment.classCode}/manage`} className="block w-full md:max-w-2xl p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+
+          <div className="float-left flex-col">
+            <div className="text-left">{enrollment.className}</div>
+            <div className="text-left">{enrollment.role}</div>
           </div>
-        </div>
+          <div className="flex-grow"></div>
+          <div className="float-right">
+            <div>Class Code: {enrollment.classCode}</div>
+          </div>
+        </Link>
       </>
     );
   } else if (enrollment.role === ROLE.STUDENT) {
     return (
       <>
-        <div className="w-full items-center md:max-w-2xl" key={enrollment.id}>
-          {/* main card body */}
-          <div className="flex w-full items-center border p-4 md:max-w-2xl">
-            <div className="float-left flex-col">
-              <div className="text-left">{enrollment.className}</div>
-              {/* <div className="text-left">
-                {enrollment.role}
-              </div> */}
-            </div>
-            <div className="flex-grow"></div>
-            <div className="float-right">
-              <div>
-                Checking:{" "}
-                {enrollment.checkingAccountBalance ||
+        <Link href={`/class/${enrollment.classCode}/transfer`} className="block w-full md:max-w-2xl p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+
+          <div className="float-left flex-col">
+            <div className="text-left">{enrollment.className}</div>
+          </div>
+          <div className="flex-grow"></div>
+          <div className="float-right">
+            <div>
+              Checking:{" "}
+              {enrollment.checkingAccountBalance ||
                 enrollment.checkingAccountBalance == 0
-                  ? `$${enrollment.checkingAccountBalance}`
-                  : "-"}
-              </div>
-              <div>
-                Investment:{" "}
-                {enrollment.investmentAccountBalance ||
+                ? `$${enrollment.checkingAccountBalance}`
+                : "-"}
+            </div>
+            <div>
+              Investment:{" "}
+              {enrollment.investmentAccountBalance ||
                 enrollment.investmentAccountBalance == 0
-                  ? `$${enrollment.investmentAccountBalance}`
-                  : "-"}
-              </div>
-              <div>
-                <Link href={`/class/${enrollment.classCode}/transfer`}>
-                  <button className="flex rounded bg-slate-500 px-2 py-0 text-white hover:bg-blue-700">
-                    Transfer
-                  </button>
-                </Link>
-              </div>
+                ? `$${enrollment.investmentAccountBalance}`
+                : "-"}
             </div>
           </div>
-        </div>
+        </Link>
       </>
     );
   } else {
