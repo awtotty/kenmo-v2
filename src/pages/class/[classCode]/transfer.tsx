@@ -1,7 +1,6 @@
 import { TRPCClientError } from "@trpc/client";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { parse } from "path";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
@@ -26,7 +25,7 @@ export default function ClassPage() {
   const [amountInput, setAmountInput] = useState<string>("0.00");
   const [noteInput, setNoteInput] = useState<string>("");
 
-  const { data: userEnrollment, isLoading: userEnrollmentLoading } =
+  const { data: userEnrollment } =
     api.enrollment.getCurrentUserByClassCode.useQuery({ classCode });
   useEffect(() => {
     setEnrollment(userEnrollment ?? null);
@@ -34,9 +33,9 @@ export default function ClassPage() {
 
   const classInfo = api.class.getByClassCode.useQuery({ classCode });
   // query the accounts with this class code and set the fromItems and toItems
-  const { data: userAccounts, isLoading: userAccountsLoading } =
+  const { data: userAccounts } =
     api.account.getAllByClassCode.useQuery({ classCode });
-  const { data: classBankAccount, isLoading: classBankAccountLoading } =
+  const { data: classBankAccount } =
     api.account.getBankAccountByClassCode.useQuery({ classCode });
 
   const { mutateAsync: createTransaction, isLoading } =

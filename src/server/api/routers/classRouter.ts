@@ -3,7 +3,6 @@ import { z } from "zod";
 import {
   createTRPCRouter,
   protectedProcedure,
-  publicProcedure,
 } from "~/server/api/trpc";
 import { TRPCClientError } from "@trpc/client";
 
@@ -23,7 +22,7 @@ export const classRouter = createTRPCRouter({
       while (true) {
         const existingEnrollment = await ctx.db.enrollment.findFirst({
           where: {
-            userId: ctx.auth?.userId!,
+            userId: ctx.auth?.userId ?? null,
             class: {
               name: input.className,
             },
@@ -65,7 +64,7 @@ export const classRouter = createTRPCRouter({
       });
 
       // enroll the user as an admin for the class
-      const enrollmentCreated = await ctx.db.enrollment.create({
+      await ctx.db.enrollment.create({
         data: {
           userId: ctx.auth.userId,
           classId: classObj.id,
@@ -109,28 +108,17 @@ export const classRouter = createTRPCRouter({
         throw new TRPCClientError("You are already enrolled in this class");
       }
 
-      // create two new accounts: one for investment and one for checking
-      const investmentAccount = await ctx.db.account.create({
-        data: {
-          ownerId: ctx.auth.userId,
-          balance: 0,
-          interestRate: 0.01, // TODO: make this a param in class creation
-          interestPeriodDays: 1,
-          name: `Investment (${classObj.name})`,
-        },
-      });
-
       const checkingAccount = await ctx.db.account.create({
         data: {
           ownerId: ctx.auth.userId,
           balance: 100, // TODO: make this a param in class creation
-          interestRate: 0.0,
-          interestPeriodDays: -1,
+          interestRate: 1.0,
+          interestPeriodDays: 1,
           name: `Checking (${classObj.name})`,
         },
       });
 
-      const newEnrollment = await ctx.db.enrollment.create({
+      await ctx.db.enrollment.create({
         data: {
           userId: ctx.auth.userId,
           classId: classObj.id,

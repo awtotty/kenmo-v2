@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { type RouterOutputs, api } from "~/utils/api";
+import { type RouterOutputs } from "~/utils/api";
 import { ROLE } from "~/utils/constants";
 
 type EnrollmentWithClassInfo =
@@ -51,7 +51,6 @@ export const ClassCard = ({
             <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
               Send Money
             </button>
-
           </div>
 
         </Link>

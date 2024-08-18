@@ -14,9 +14,9 @@ const JoinClass = () => {
     onSuccess: async (output) => {
       toast.success(`Joined class with code: ${output.classCode}`);
       await apiUtils.enrollment.getAllCurrentUser.invalidate();
-      router.push(`/`);
+      void router.push(`/`);
     },
-    onError: (error) => {
+    onError: () => {
       toast.error(`Could not join class. Do you have a valid class code?`);
     },
   });
@@ -34,10 +34,10 @@ const JoinClass = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={isLoading}
-          onKeyDown={async (e) => {
+          onKeyDown={(e) => {
             if (e.key === "Enter") {
               try {
-                await joinClass({ classCode: input });
+                void joinClass({ classCode: input });
                 setInput("");
               } catch (e) {}
             }
@@ -46,9 +46,9 @@ const JoinClass = () => {
         <button
           className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
           disabled={isLoading}
-          onClick={async () => {
+          onClick={() => {
             try {
-              await joinClass({ classCode: input });
+              void joinClass({ classCode: input });
               setInput("");
             } catch (e) {}
           }}
@@ -69,9 +69,9 @@ const CreateClass = () => {
     onSuccess: async (output) => {
       toast.success(`Class created with code: ${output.classCode}`);
       await apiUtils.enrollment.getAllCurrentUser.invalidate();
-      router.push(`/`);
+      void router.push(`/`);
     },
-    onError: (error) => {
+    onError: () => {
       toast.error(`Could not create class. Class names can't be blank.`);
     },
   });
@@ -89,10 +89,10 @@ const CreateClass = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={isLoading}
-          onKeyDown={async (e) => {
+          onKeyDown={(e) => {
             if (e.key === "Enter") {
               try {
-                await createClass({ className: input });
+                void createClass({ className: input });
                 setInput("");
               } catch (e) {}
             }
@@ -101,9 +101,9 @@ const CreateClass = () => {
         <button
           className="rounded bg-slate-400 px-4 py-2 font-bold text-white hover:bg-blue-700"
           disabled={isLoading}
-          onClick={async () => {
+          onClick={() => {
             try {
-              await createClass({ className: input });
+              void createClass({ className: input });
               setInput("");
             } catch (e) {}
           }}

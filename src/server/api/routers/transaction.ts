@@ -1,14 +1,10 @@
 import { z } from "zod";
-import apply_interest from "~/server/api/cron/interest";
-
 import {
   createTRPCRouter,
   protectedProcedure,
-  publicProcedure,
 } from "~/server/api/trpc";
 import { TRPCClientError } from "@trpc/client";
-import { RouterOutputs } from "~/utils/api";
-import { accountRouter } from "./account";
+import { type Enrollment } from "@prisma/client/edge";
 
 export const transactionRouter = createTRPCRouter({
   create: protectedProcedure
@@ -88,7 +84,7 @@ export const transactionRouter = createTRPCRouter({
       }
 
       if (input.amount !== 0) {
-        const transaction = await ctx.db.transaction.create({
+        await ctx.db.transaction.create({
           data: {
             fromAccountId: input.fromAccountId,
             toAccountId: input.toAccountId,
@@ -123,14 +119,14 @@ export const transactionRouter = createTRPCRouter({
 
       // ensure user is admin of class
       const userEnrollment = enrollments.find(
-        (enrollment) => enrollment.userId === ctx.auth.userId,
+        (enrollment: Enrollment) => enrollment.userId === ctx.auth.userId,
       );
       if (!userEnrollment || userEnrollment.role !== "ADMIN") {
         throw new TRPCClientError("You are not an admin of this class");
       }
 
       const relevantAccounts = enrollments
-        .map((enrollment) => enrollment.checkingAccountId)
+        .map((enrollment: Enrollment) => enrollment.checkingAccountId)
 
       const transactions = await ctx.db.transaction.findMany({
         where: {

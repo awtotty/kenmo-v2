@@ -1,12 +1,14 @@
-import { create } from "domain";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
 import { api } from "~/utils/api";
+import { type RouterOutputs } from "~/utils/api";
 
-type Transaction = { id: number, amount: number; fromAccountId: number; toAccountId: number; note: string };
+type Enrollment = RouterOutputs["enrollment"]["getAllByClassCode"][0];
+type Transaction = RouterOutputs["transaction"]["getAllByClassCode"][0];
+type CustomTransaction = RouterOutputs["transaction"]["getCustomTransactions"][0];
 
 const TransactionFeed = (prop: { classCode: string }) => {
   const { data: transactions, isLoading } =
@@ -21,7 +23,7 @@ const TransactionFeed = (prop: { classCode: string }) => {
         Recent Transactions
       </div>
       <div className="md: flex w-full max-w-2xl flex-col items-center justify-center gap-4">
-        {transactions?.map((transaction) => (
+        {transactions?.map((transaction: Transaction) => (
           <div
             key={transaction.id}
             className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2"
@@ -40,13 +42,6 @@ const TransactionFeed = (prop: { classCode: string }) => {
 };
 
 export default function ClassPage() {
-  const sampleTransactions = [
-    { id: 1, amount: 5, fromAccountId: -1, toAccountId: -1, note: "Built-in transaction" },
-    { id: 2, amount: -10, fromAccountId: -1, toAccountId: -1, note: "Built-in transaction" },
-    { id: 3, amount: -5, fromAccountId: -1, toAccountId: -1, note: "Built-in transaction" },
-    { id: 4, amount: 10, fromAccountId: -1, toAccountId: -1, note: "Built-in transaction" },
-  ]
-
   const apiUtils = api.useUtils();
   const router = useRouter();
   const classCode =
@@ -54,9 +49,9 @@ export default function ClassPage() {
   const [loadingState, setLoadingState] = useState<
     "loading" | "invalidClassCode" | "invalidEnrollments" | "loaded"
   >("loading");
-  const { data: enrollments, isLoading } =
+  const { data: enrollments } =
     api.enrollment.getAllByClassCode.useQuery({ classCode });
-  const [possibleTransactions, setPossibleTransactions] = useState<Transaction[]>(sampleTransactions);
+  const [possibleTransactions, setPossibleTransactions] = useState<CustomTransaction[]>([]);
   const customTransactions = api.transaction.getCustomTransactions.useQuery();
   const userAccounts = api.account.getAllByClassCode.useQuery({ classCode });
   const classInfo = api.class.getByClassCode.useQuery({ classCode });
@@ -79,23 +74,17 @@ export default function ClassPage() {
 
   useEffect(() => {
     if (customTransactions.data && customTransactions.data.length != 0) {
-      setPossibleTransactions(customTransactions.data.map((transaction, index) => ({
-        id: possibleTransactions.length + index + 1, 
-        amount: transaction.amount,
-        fromAccountId: -1, 
-        toAccountId: -1,
-        note: transaction.note ?? "",
-      })));
+      setPossibleTransactions(customTransactions.data);
     }
-  }, [customTransactions.data]); // Dependency array ensures this runs only when customTransactions.data changes
+  }, [customTransactions.data, possibleTransactions.length]); // Dependency array ensures this runs only when customTransactions.data changes
 
   const { mutateAsync: deleteEnrollment, isLoading: deleteIsLoading } =
     api.enrollment.delete.useMutation({
       onSuccess: () => {
         toast.success("Enrollment deleted");
-        apiUtils.enrollment.getAllByClassCode.invalidate();
+        void apiUtils.enrollment.getAllByClassCode.invalidate();
       },
-      onError: (error) => {
+      onError: () => {
         toast.error("Could not delete enrollment");
       },
     });
@@ -103,10 +92,10 @@ export default function ClassPage() {
     api.transaction.create.useMutation({
       onSuccess: () => {
         toast.success("Transaction created");
-        apiUtils.enrollment.getAllByClassCode.invalidate();
-        apiUtils.transaction.getAllByClassCode.invalidate();
+        void apiUtils.enrollment.getAllByClassCode.invalidate();
+        void apiUtils.transaction.getAllByClassCode.invalidate();
       },
-      onError: (error) => {
+      onError: () => {
         toast.error("Could not create transaction");
       },
     });
@@ -114,9 +103,9 @@ export default function ClassPage() {
     api.class.delete.useMutation({
       onSuccess: () => {
         toast.success("Class deleted");
-        router.push("/");
+        void router.push("/");
       },
-      onError: (error) => {
+      onError: () => {
         toast.error("Could not delete class");
       },
     });
@@ -146,7 +135,7 @@ export default function ClassPage() {
           </div>
         </div>
         <div className="flex flex-col">
-          {enrollments?.map((enrollment) => (
+          {enrollments?.map((enrollment: Enrollment) => (
             <div
               className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2"
               key={enrollment.id}
@@ -159,7 +148,12 @@ export default function ClassPage() {
                   defaultValue={possibleTransactions[0]?.id}
                 >
                   {possibleTransactions.map((transaction) => (
-                    <option value={transaction.id}>{`$${transaction.amount} ${transaction.note}`}</option>
+                    <option
+                      key={transaction.id}
+                      value={transaction.id}
+                    >
+                      {`$${transaction.amount} ${transaction.note}`}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -170,15 +164,19 @@ export default function ClassPage() {
                   onClick={() => {
                     // use the value of the select to create a transaction
                     const id = parseInt((document.getElementById(`amount-${enrollment.id}`) as HTMLSelectElement).value);
-                    let tempTransaction = possibleTransactions.find((transaction) => transaction.id == id);
+                    const tempTransaction = possibleTransactions.find((transaction) => transaction.id == id);
                     if (!tempTransaction) {
                       toast.error("Could not find transaction");
                       return;
                     };
-                    tempTransaction.fromAccountId = userAccounts.data?.[0]?.id ?? -1
-                    tempTransaction.toAccountId = enrollment.checkingAccountId ?? -1
-                    console.log(tempTransaction);
-                    createTransaction(tempTransaction);
+                    const fromAccountId = userAccounts.data?.[0]?.id ?? -1
+                    const toAccountId = enrollment.checkingAccountId ?? -1
+                    if (!tempTransaction.note) tempTransaction.note = "";
+                    void createTransaction({ 
+                      fromAccountId,
+                      toAccountId,
+                      ...tempTransaction
+                    });
                   }}
                 >
                   Transfer
@@ -190,7 +188,7 @@ export default function ClassPage() {
               <div>{enrollment.email}</div>
               <div>{enrollment.role}</div>
               <div>
-                {enrollment.checkingAccountBalance ||
+                {enrollment.checkingAccountBalance ??
                   enrollment.checkingAccountBalance == 0
                   ? `$${enrollment.checkingAccountBalance}`
                   : "-"}
@@ -200,7 +198,7 @@ export default function ClassPage() {
                   className="rounded bg-red-400 px-2 py-1 font-bold text-white hover:bg-red-700"
                   disabled={deleteIsLoading}
                   onClick={() => {
-                    deleteEnrollment({ id: enrollment.id });
+                    void deleteEnrollment({ id: enrollment.id });
                   }}
                 >
                   Remove
@@ -219,7 +217,7 @@ export default function ClassPage() {
             className="rounded bg-red-400 px-4 py-2 font-bold text-white hover:bg-red-700"
             disabled={deleteClassIsLoading}
             onClick={() => {
-              deleteClass({ classCode });
+              void deleteClass({ classCode });
             }}
           >
             Delete Class

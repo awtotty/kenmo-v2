@@ -3,7 +3,6 @@ import { z } from "zod";
 import {
   createTRPCRouter,
   protectedProcedure,
-  publicProcedure,
 } from "~/server/api/trpc";
 import type { Enrollment } from "@prisma/client/edge";
 import { db } from "~/server/db";

@@ -64,7 +64,7 @@ model CustomTransaction {
   id      Int     @id @default(autoincrement())
   amount  Float
   ownerId String
-  note    String?
+  note    String
   createdAt     DateTime @default(now())
 }
 
