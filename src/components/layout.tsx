@@ -3,7 +3,7 @@ import { Nav } from "./navigation";
 
 export const PageLayout = (props: PropsWithChildren) => {
   return (
-    <main className="flex flex-col items-center justify-center gap-8">
+    <main className="flex flex-col items-center justify-center gap-8 overflow-x-auto">
       <Nav />
       {props.children}
     </main>

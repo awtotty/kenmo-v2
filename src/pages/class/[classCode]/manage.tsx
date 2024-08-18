@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
 import { api } from "~/utils/api";
@@ -19,23 +19,35 @@ const TransactionFeed = (prop: { classCode: string }) => {
 
   return (
     <>
-      <div className="my-2 flex flex-col gap-4 border-b-2 border-gray-200 text-center">
+      <div className="">
         Recent Transactions
       </div>
-      <div className="md: flex w-full max-w-2xl flex-col items-center justify-center gap-4">
-        {transactions?.map((transaction: Transaction) => (
-          <div
-            key={transaction.id}
-            className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2"
-          >
-            <div>${transaction.amount}</div>
-            <div>
-              {transaction.fromAccountId} {"=>"} {transaction.toAccountId}
-            </div>
-            <div>{transaction.createdAt.toTimeString()}</div>
-            <div>{transaction.note}</div>
-          </div>
-        ))}
+
+      <div className="overflow-x-auto">
+        <table className="md:min-w-full table-auto border-collapse border border-gray-300">
+          <thead>
+            <tr>
+              <th className="min-w-[200px] border border-gray-300 bg-gray-700 p-2">Date</th>
+              <th className="min-w-[100px] border border-gray-300 bg-gray-700 p-2">From</th>
+              <th className="min-w-[100px] border border-gray-300 bg-gray-700 p-2">To</th>
+              <th className="min-w-[50px] border border-gray-300 bg-gray-700 p-2">Amount</th>
+              <th className="min-w-[100px] border border-gray-300 bg-gray-700 p-2">Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            {transactions?.map((transaction: Transaction) => (
+              <tr
+                key={transaction.id}
+              >
+                <td>{transaction.createdAt.toLocaleString()}</td>
+                <td>{transaction.fromAccountId}</td>
+                <td>{transaction.toAccountId}</td>
+                <td>${transaction.amount}</td>
+                <td>{transaction.note}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </>
   );
@@ -55,6 +67,8 @@ export default function ClassPage() {
   const customTransactions = api.transaction.getCustomTransactions.useQuery();
   const userAccounts = api.account.getAllByClassCode.useQuery({ classCode });
   const classInfo = api.class.getByClassCode.useQuery({ classCode });
+
+  const noteInputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
 
   useEffect(() => {
     if (!classCode) {
@@ -112,6 +126,9 @@ export default function ClassPage() {
 
   if (loadingState === "loading") return <div>Loading...</div>;
 
+  const tableColumns = ["Transaction", "Note", "Name", "Email", "Balance"];
+  const tableColumnWidths = ["300px", "300px", "100px", "50px", "100px"];
+
   return (
     <>
       <Head>
@@ -123,77 +140,86 @@ export default function ClassPage() {
         <div>{classInfo.data?.className}</div>
         <div>Class code: {classCode}</div>
         {/* list all enrollments */}
-        <div>
-          <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2">
-            <div>Amount</div>
-            <div>Transfer</div>
-            <div>Name</div>
-            <div>Email</div>
-            <div>Role</div>
-            <div>Balance</div>
-            <div>Remove</div>
-          </div>
-        </div>
-        <div className="flex flex-col">
-          {enrollments?.map((enrollment: Enrollment) => (
-            <div
-              className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2"
-              key={enrollment.id}
-            >
-              <div>
-                <select
-                  className="rounded border border-gray-400 bg-white px-2 py-1 text-gray-700"
-                  name="amount"
-                  id={`amount-${enrollment.id}`}
-                  defaultValue={possibleTransactions[0]?.id}
+        <div className="overflow-x-auto">
+          <table className="md:min-w-full table-auto border-collapse border border-gray-300">
+            <thead>
+              <tr>
+                {tableColumns.map((column, index) => (
+                  <th key={index} className={`min-w-[${tableColumnWidths[index]}] border border-gray-300 bg-gray-700 p-2`}>{column}</th>
+                ))
+                }
+              </tr>
+            </thead>
+            <tbody>
+              {enrollments?.map((enrollment: Enrollment) => (
+                <tr
+                  className="w-full"
+                  key={enrollment.id}
                 >
-                  {possibleTransactions.map((transaction) => (
-                    <option
-                      key={transaction.id}
-                      value={transaction.id}
+                  <td className="border border-gray-300 p-2">
+                    <select
+                      className="rounded border border-gray-400 bg-white px-2 py-1 text-gray-700"
+                      name="amount"
+                      id={`amount-${enrollment.id}`}
+                      defaultValue={possibleTransactions[0]?.id}
                     >
-                      {`$${transaction.amount} ${transaction.note}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <button
-                  className="rounded bg-blue-400 px-2 py-1 font-bold text-white hover:bg-blue-700"
-                  disabled={createIsLoading}
-                  onClick={() => {
-                    // use the value of the select to create a transaction
-                    const id = parseInt((document.getElementById(`amount-${enrollment.id}`) as HTMLSelectElement).value);
-                    const tempTransaction = possibleTransactions.find((transaction) => transaction.id == id);
-                    if (!tempTransaction) {
-                      toast.error("Could not find transaction");
-                      return;
-                    };
-                    const fromAccountId = userAccounts.data?.[0]?.id ?? -1
-                    const toAccountId = enrollment.checkingAccountId ?? -1
-                    if (!tempTransaction.note) tempTransaction.note = "";
-                    void createTransaction({ 
-                      fromAccountId,
-                      toAccountId,
-                      ...tempTransaction
-                    });
-                  }}
-                >
-                  Transfer
-                </button>
-              </div>
-              <div>
-                {enrollment.firstName} {enrollment.lastName}
-              </div>
-              <div>{enrollment.email}</div>
-              <div>{enrollment.role}</div>
-              <div>
-                {enrollment.checkingAccountBalance ??
-                  enrollment.checkingAccountBalance == 0
-                  ? `$${enrollment.checkingAccountBalance}`
-                  : "-"}
-              </div>
-              <div>
+                      {possibleTransactions.map((transaction) => (
+                        <option
+                          key={transaction.id}
+                          value={transaction.id}
+                        >
+                          {`$${transaction.amount} ${transaction.note}`}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      className="rounded bg-blue-400 px-2 py-1 font-bold text-white hover:bg-blue-700"
+                      disabled={createIsLoading}
+                      onClick={() => {
+                        // use the value of the select to create a transaction
+                        const id = parseInt((document.getElementById(`amount-${enrollment.id}`) as HTMLSelectElement).value);
+                        const tempTransaction = possibleTransactions.find((transaction) => transaction.id == id);
+                        if (!tempTransaction) {
+                          toast.error("Could not find transaction");
+                          return;
+                        };
+                        const fromAccountId = userAccounts.data?.[0]?.id ?? -1
+                        const toAccountId = enrollment.checkingAccountId ?? -1
+                        tempTransaction.note = noteInputRefs.current.get(enrollment.id)?.value ?? tempTransaction.note;
+                        void createTransaction({
+                          fromAccountId,
+                          toAccountId,
+                          ...tempTransaction
+                        });
+                      }}
+                    >
+                      Transfer
+                    </button>
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    <input
+                      ref={(el) => { 
+                        if (el) {
+                          noteInputRefs.current.set(enrollment.id, el)
+                        }
+                      }}
+                      placeholder="Note"
+                      className="rounded border border-gray-400 bg-white px-2 py-1 text-gray-700"
+                      type="text"
+                      id={`note-${enrollment.id}`}
+                    />
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {enrollment.firstName} {enrollment.lastName}
+                  </td>
+                  <td className="border border-gray-300 p-2">{enrollment.email}</td>
+                  <td className="border border-gray-300 p-2">
+                    {enrollment.checkingAccountBalance ??
+                      enrollment.checkingAccountBalance == 0
+                      ? `$${enrollment.checkingAccountBalance}`
+                      : "-"}
+                  </td>
+                  {/*<div>
                 <button
                   className="rounded bg-red-400 px-2 py-1 font-bold text-white hover:bg-red-700"
                   disabled={deleteIsLoading}
@@ -204,25 +230,32 @@ export default function ClassPage() {
                   Remove
                 </button>
               </div>
-            </div>
-          ))}
+              */}
+                </tr>
+              ))}
+            </tbody>
+
+          </table>
         </div>
 
         <div>
           <TransactionFeed classCode={classCode} />
         </div>
 
-        <div>
-          <button
-            className="rounded bg-red-400 px-4 py-2 font-bold text-white hover:bg-red-700"
-            disabled={deleteClassIsLoading}
-            onClick={() => {
-              void deleteClass({ classCode });
-            }}
-          >
-            Delete Class
-          </button>
-        </div>
+
+        {/*
+          <div>
+            <button
+              className="rounded bg-red-400 px-4 py-2 font-bold text-white hover:bg-red-700"
+              disabled={deleteClassIsLoading}
+              onClick={() => {
+                void deleteClass({ classCode });
+              }}
+            >
+              Delete Class
+            </button>
+          </div>
+          */}
       </PageLayout>
     </>
   );
