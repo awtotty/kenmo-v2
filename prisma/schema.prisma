@@ -25,7 +25,6 @@ model Enrollment {
   userId              String
   classId             Int
   role                Role
-  investmentAccountId Int
   checkingAccountId   Int
   class               Class  @relation(fields: [classId], references: [id])
 

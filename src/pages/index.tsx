@@ -1,9 +1,9 @@
 import Head from "next/head";
-import { useState } from "react";
-import toast from "react-hot-toast";
 import { ClassCard } from "~/components/classCard";
 import { PageLayout } from "~/components/layout";
-import { api } from "~/utils/api";
+import { type RouterOutputs, api } from "~/utils/api";
+
+type Enrollment = RouterOutputs["enrollment"]["getAllCurrentUser"][0];
 
 // a new component to show the user's enrollments
 const Enrollments = () => {
@@ -18,7 +18,7 @@ const Enrollments = () => {
   return (
     <>
       <div className="md: flex w-full max-w-2xl flex-col items-center justify-center gap-4">
-        {enrollments?.map((enrollment) => (
+        {enrollments?.map((enrollment: Enrollment) => (
           <ClassCard
             enrollment={enrollment}
             key={enrollment.id}
@@ -28,29 +28,6 @@ const Enrollments = () => {
     </>
   );
 }
-
-const AccountFeed = () => {
-  const { data: enrollments, isLoading } =
-    api.enrollment.getAllCurrentUser.useQuery();
-
-  if (isLoading) return <div>Loading...</div>;
-
-  if (!enrollments || enrollments.length == 0)
-    return <div>No enrollments found.</div>;
-
-  return (
-    <>
-      <div className="md: flex w-full max-w-2xl flex-col items-center justify-center gap-4">
-        {enrollments?.map((enrollment) => (
-          <ClassCard
-            enrollment={enrollment}
-            key={enrollment.id}
-          />
-        ))}
-      </div>
-    </>
-  );
-};
 
 // const InterestTestButton = () => {
 //   const { mutateAsync: interestTest, isLoading } = api.transaction.testInterest.useMutation({
@@ -82,8 +59,6 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <PageLayout>
-        // <AccountFeed />
-        {/* <InterestTestButton /> */}
         <Enrollments />
       </PageLayout>
     </>

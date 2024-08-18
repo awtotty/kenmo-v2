@@ -5,7 +5,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import type { Enrollment } from "@prisma/client";
+import type { Enrollment } from "@prisma/client/edge";
 import { db } from "~/server/db";
 import { clerkClient } from "@clerk/nextjs";
 
@@ -17,12 +17,6 @@ const cleanEnrollmentForClient = async (enrollment: Enrollment) => {
   });
 
   const user = await clerkClient.users.getUser(enrollment.userId);
-
-  const investmentAccount = await db.account.findFirst({
-    where: {
-      id: enrollment.investmentAccountId,
-    },
-  });
 
   const checkingAccount = await db.account.findFirst({
     where: {
@@ -38,7 +32,6 @@ const cleanEnrollmentForClient = async (enrollment: Enrollment) => {
     role: enrollment.role,
     className: classObj?.name,
     classCode: classObj?.classCode,
-    investmentAccountBalance: investmentAccount?.balance,
     checkingAccountBalance: checkingAccount?.balance,
     checkingAccountId: checkingAccount?.id,
   };
@@ -48,17 +41,56 @@ export const enrollmentRouter = createTRPCRouter({
   getAllCurrentUser: protectedProcedure.query(async ({ ctx }) => {
     const enrollments = await ctx.db.enrollment.findMany({
       where: {
-        userId: ctx.auth?.userId!,
+        userId: ctx.auth?.userId ?? null,
       },
     });
 
     // Use Promise.all to await all promises returned by addClassNameToEnrollment
     return await Promise.all(
       enrollments.map(
-        async (enrollment) => await cleanEnrollmentForClient(enrollment),
+        async (enrollment: Enrollment) => await cleanEnrollmentForClient(enrollment),
       ),
     );
   }),
+
+  getCurrentUserByClassCode: protectedProcedure
+    .input(
+      z.object({
+        classCode: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      if (!ctx.auth?.userId) {
+        throw new Error("You must be logged in to view this class");
+      }
+
+      const classObj = await db.class.findFirst({
+        where: {
+          classCode: input.classCode,
+        },
+      });
+
+      if (!classObj) {
+        throw new Error("Class not found");
+      }
+
+      const enrollments = await ctx.db.enrollment.findMany({
+        where: {
+          userId: ctx.auth.userId,
+          classId: classObj.id,
+        },
+      });
+
+      if (!enrollments) {
+        throw new Error("No enrollments found");
+      }
+
+      if (1 < enrollments.length) {
+        throw new Error("Multiple enrollments found");
+      }
+
+      return await cleanEnrollmentForClient(enrollments[0]);
+    }), 
 
   getAllByClassCode: protectedProcedure
     .input(
@@ -92,17 +124,17 @@ export const enrollmentRouter = createTRPCRouter({
       }
 
       const adminIds = enrollments
-        .filter((enrollment) => enrollment.role === "ADMIN")
-        .map((enrollment) => enrollment.userId);
+        .filter((enrollment: Enrollment) => enrollment.role === "ADMIN")
+        .map((enrollment: Enrollment) => enrollment.userId);
 
-      if (!adminIds.includes(ctx.auth?.userId!)) {
+      if (!adminIds.includes(ctx.auth?.userId ?? null)) {
         throw new Error("You are not an admin of this class");
       }
 
       // Use Promise.all to await all promises returned by addClassNameToEnrollment
       return await Promise.all(
         enrollments.map(
-          async (enrollment) => await cleanEnrollmentForClient(enrollment),
+          async (enrollment: Enrollment) => await cleanEnrollmentForClient(enrollment),
         ),
       );
     }),
@@ -129,8 +161,8 @@ export const enrollmentRouter = createTRPCRouter({
 
       if (
         !adminIds
-          .map((enrollment) => enrollment.userId)
-          .includes(ctx.auth?.userId!)
+          .map((enrollment: Enrollment) => enrollment.userId)
+          .includes(ctx.auth?.userId ?? null)
       ) {
         throw new Error("You are not an admin of this class");
       }

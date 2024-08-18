@@ -5,9 +5,10 @@ import { parse } from "path";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
-import { RouterOutputs, api } from "~/utils/api";
+import { type RouterOutputs, api } from "~/utils/api";
 
 type Account = RouterOutputs["account"]["getAllByClassCode"][0];
+type Enrollment = RouterOutputs["enrollment"]["getCurrentUserByClassCode"];
 
 export default function ClassPage() {
   const router = useRouter();
@@ -17,34 +18,30 @@ export default function ClassPage() {
   const [loadingState, setLoadingState] = useState<
     "loading" | "invalidClassCode" | "loaded"
   >("loading");
+  const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [fromItems, setFromItems] = useState<Account[]>([]);
   const [toItems, setToItems] = useState<Account[]>([]);
-  const [fromSelectedItem, setFromSelectedItem] = useState("");
-  const [toSelectedItem, setToSelectedItem] = useState("");
-  const [amountInput, setAmountInput] = useState("0.00");
-  const [noteInput, setNoteInput] = useState("");
+  const [fromSelectedItem, setFromSelectedItem] = useState<Account | null>(null);
+  const [toSelectedItem, setToSelectedItem] = useState<Account | null>(null);
+  const [amountInput, setAmountInput] = useState<string>("0.00");
+  const [noteInput, setNoteInput] = useState<string>("");
 
+  const { data: userEnrollment, isLoading: userEnrollmentLoading } =
+    api.enrollment.getCurrentUserByClassCode.useQuery({ classCode });
   useEffect(() => {
-    if (!classCode) {
-      setLoadingState("invalidClassCode");
-    } else {
-      setLoadingState("loaded");
-    }
-  }, [classCode]);
+    setEnrollment(userEnrollment ?? null);
+  }, [userEnrollment]);
 
   const classInfo = api.class.getByClassCode.useQuery({ classCode });
   // query the accounts with this class code and set the fromItems and toItems
-  const { data: accounts, isLoading: accountsLoading } =
+  const { data: userAccounts, isLoading: userAccountsLoading } =
     api.account.getAllByClassCode.useQuery({ classCode });
-  useEffect(() => {
-    if (accounts) {
-      setFromItems(accounts);
-      setToItems(accounts);
-    }
-  }, [accounts]);
+  const { data: classBankAccount, isLoading: classBankAccountLoading } =
+    api.account.getBankAccountByClassCode.useQuery({ classCode });
+
   const { mutateAsync: createTransaction, isLoading } =
     api.transaction.create.useMutation({
-      onSuccess: async (output) => {
+      onSuccess: () => {
         toast.success(`Transaction complete`);
       },
       onError: (error) => {
@@ -55,6 +52,52 @@ export default function ClassPage() {
         }
       },
     });
+
+  const handleTransfer = async () => {
+    if (!fromSelectedItem || !toSelectedItem) {
+      toast.error("Please select accounts");
+      return;
+    }
+    if (fromSelectedItem === toSelectedItem) {
+      toast.error("Cannot transfer to the same account");
+      return;
+    }
+    if (parseFloat(amountInput) <= 0) {
+      toast.error("Amount must be greater than $0");
+      return;
+    }
+    try {
+      await createTransaction({
+        fromAccountId: parseInt(fromSelectedItem, 10),
+        toAccountId: parseInt(toSelectedItem, 10),
+        amount: parseFloat(amountInput),
+        note: noteInput,
+      });
+      await apiUtils.account.getAllByClassCode.invalidate({ classCode });
+      setAmountInput("0.00");
+    } catch (e) {
+    }
+  };
+
+  useEffect(() => {
+    if (userAccounts) {
+      setFromItems(userAccounts);
+    }
+  }, [userAccounts]);
+
+  useEffect(() => {
+    if (classBankAccount) {
+      setToItems(classBankAccount);
+    }
+  }, [classBankAccount]);
+
+  useEffect(() => {
+    if (!classCode) {
+      setLoadingState("invalidClassCode");
+    } else {
+      setLoadingState("loaded");
+    }
+  }, [classCode]);
 
   if (loadingState === "loading") return <div>Loading...</div>;
 
@@ -71,10 +114,11 @@ export default function ClassPage() {
 
         <div className="flex-col">
           <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2">
-            From account:
+            From:
             <select
-              className="rounded border-2 border-gray-200 text-gray-700"
+              className="rounded border-2 border-gray-200 text-gray-700 w-48"
               value={fromSelectedItem}
+              defaultValue={fromSelectedItem}
               onChange={(e) => setFromSelectedItem(e.target.value)}
               disabled={isLoading}
             >
@@ -83,14 +127,14 @@ export default function ClassPage() {
                 <option
                   key={item.id}
                   value={item.id}
-                >{`${item.name} ($${item.balance})`}</option>
+                >{`${enrollment?.firstName}${enrollment?.firstName ? "'s" : ""} ${item.name} ($${item.balance})`}</option>
               ))}
             </select>
           </div>
           <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2">
-            To account:
+            To:
             <select
-              className="rounded border-2 border-gray-200 text-gray-700"
+              className="rounded border-2 border-gray-200 text-gray-700 w-48"
               value={toSelectedItem}
               onChange={(e) => setToSelectedItem(e.target.value)}
               disabled={isLoading}
@@ -100,11 +144,11 @@ export default function ClassPage() {
                 <option
                   key={item.id}
                   value={item.id}
-                >{`${item.name} ($${item.balance})`}</option>
+                >{`${enrollment?.className} Bank ${item.id}`}</option>
               ))}
             </select>
           </div>
-          <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2">
+          <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2 w-48">
             Amount:
             <input
               className="rounded border-2 border-gray-200 text-gray-700"
@@ -114,7 +158,7 @@ export default function ClassPage() {
               disabled={isLoading}
             />
           </div>
-          <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2">
+          <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2 w-48">
             Note:
             <input
               className="rounded border-2 border-gray-200 text-gray-700"
@@ -129,18 +173,7 @@ export default function ClassPage() {
             <button
               className="rounded bg-slate-400 px-4 py-2 font-bold text-white hover:bg-blue-700"
               disabled={isLoading}
-              onClick={async () => {
-                try {
-                  await createTransaction({
-                    fromAccountId: parseInt(fromSelectedItem, 10),
-                    toAccountId: parseInt(toSelectedItem, 10),
-                    amount: parseFloat(amountInput),
-                    note: noteInput,
-                  });
-                  apiUtils.account.getAllByClassCode.invalidate({ classCode });
-                  setAmountInput("0.00");
-                } catch (e) {}
-              }}
+              onClick={() => void handleTransfer()}
             >
               Transfer
             </button>

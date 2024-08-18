@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { RouterOutputs, api } from "~/utils/api";
+import { type RouterOutputs, api } from "~/utils/api";
 import { ROLE } from "~/utils/constants";
 
 type EnrollmentWithClassInfo =
@@ -42,20 +42,18 @@ export const ClassCard = ({
           <div className="flex-grow"></div>
           <div className="float-right">
             <div>
-              Checking:{" "}
-              {enrollment.checkingAccountBalance ||
+              Balance:{" "}
+              {enrollment.checkingAccountBalance ??
                 enrollment.checkingAccountBalance == 0
                 ? `$${enrollment.checkingAccountBalance}`
                 : "-"}
             </div>
-            <div>
-              Investment:{" "}
-              {enrollment.investmentAccountBalance ||
-                enrollment.investmentAccountBalance == 0
-                ? `$${enrollment.investmentAccountBalance}`
-                : "-"}
-            </div>
+            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+              Send Money
+            </button>
+
           </div>
+
         </Link>
       </>
     );

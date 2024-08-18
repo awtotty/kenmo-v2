@@ -3,9 +3,9 @@ import { z } from "zod";
 import {
   createTRPCRouter,
   protectedProcedure,
-  publicProcedure,
 } from "~/server/api/trpc";
 import { TRPCClientError } from "@trpc/client";
+import type { Enrollment } from "@prisma/client/edge";
 
 export const accountRouter = createTRPCRouter({
   create: protectedProcedure
@@ -74,10 +74,51 @@ export const accountRouter = createTRPCRouter({
       }
 
       const accountIds = enrollments
-        .map((enrollment) => enrollment.checkingAccountId)
-        .concat(
-          enrollments.map((enrollment) => enrollment.investmentAccountId),
-        );
+        .map((enrollment: Enrollment) => enrollment.checkingAccountId)
+
+      return await ctx.db.account.findMany({
+        where: {
+          id: {
+            in: accountIds,
+          },
+        },
+      });
+    }),
+
+  getBankAccountByClassCode: protectedProcedure
+    .input(
+      z.object({
+        classCode: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      if (!ctx.auth?.userId) {
+        throw new TRPCClientError("You must be logged in to view this class");
+      }
+
+      const classObj = await ctx.db.class.findFirst({
+        where: {
+          classCode: input.classCode,
+        },
+      });
+
+      if (!classObj) {
+        throw new TRPCClientError("Class not found");
+      }
+
+      const enrollments = await ctx.db.enrollment.findMany({
+        where: {
+          classId: classObj.id,
+          role: "ADMIN",
+        },
+      });
+
+      if (!enrollments) {
+        throw new TRPCClientError("No enrollments found");
+      }
+
+      const accountIds = enrollments
+        .map((enrollment: Enrollment) => enrollment.checkingAccountId)
 
       return await ctx.db.account.findMany({
         where: {
