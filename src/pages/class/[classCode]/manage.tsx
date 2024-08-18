@@ -191,6 +191,9 @@ export default function ClassPage() {
                           toAccountId,
                           ...tempTransaction
                         });
+                        if (noteInputRefs.current.get(enrollment.id) != undefined) {
+                          noteInputRefs.current.get(enrollment.id)!.value = "";
+                        }
                       }}
                     >
                       Transfer
@@ -198,7 +201,7 @@ export default function ClassPage() {
                   </td>
                   <td className="border border-gray-300 p-2">
                     <input
-                      ref={(el) => { 
+                      ref={(el) => {
                         if (el) {
                           noteInputRefs.current.set(enrollment.id, el)
                         }
