@@ -161,8 +161,9 @@ export default function ClassPage() {
                       className="rounded border border-gray-400 bg-white px-2 py-1 text-gray-700"
                       name="amount"
                       id={`amount-${enrollment.id}`}
-                      defaultValue={possibleTransactions[0]?.id}
+                      defaultValue={undefined}
                     >
+                      <option value={undefined}>Select a transaction</option>
                       {possibleTransactions.map((transaction) => (
                         <option
                           key={transaction.id}
@@ -185,7 +186,10 @@ export default function ClassPage() {
                         };
                         const fromAccountId = userAccounts.data?.[0]?.id ?? -1
                         const toAccountId = enrollment.checkingAccountId ?? -1
-                        tempTransaction.note = noteInputRefs.current.get(enrollment.id)?.value ?? tempTransaction.note;
+                        // check for note override
+                        if (noteInputRefs.current.get(enrollment.id)?.value != "") {
+                          tempTransaction.note = noteInputRefs.current.get(enrollment.id)?.value ?? tempTransaction.note;
+                        }
                         void createTransaction({
                           fromAccountId,
                           toAccountId,
@@ -206,7 +210,7 @@ export default function ClassPage() {
                           noteInputRefs.current.set(enrollment.id, el)
                         }
                       }}
-                      placeholder="Note"
+                      placeholder="Note (optional)"
                       className="rounded border border-gray-400 bg-white px-2 py-1 text-gray-700"
                       type="text"
                       id={`note-${enrollment.id}`}
