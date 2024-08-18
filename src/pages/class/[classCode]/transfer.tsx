@@ -66,6 +66,10 @@ export default function ClassPage() {
       toast.error("Amount must be greater than $0");
       return;
     }
+    if (noteInput === "") {
+      toast.error("Please enter a note");
+      return;
+    }
     try {
       await createTransaction({
         fromAccountId: parseInt(fromSelectedItem, 10),
@@ -164,7 +168,7 @@ export default function ClassPage() {
               className="rounded border-2 border-gray-200 text-gray-700"
               type="text"
               value={noteInput}
-              placeholder="(Optional)"
+              placeholder="What is this for?"
               onChange={(e) => setNoteInput(e.target.value)}
               disabled={isLoading}
             />
