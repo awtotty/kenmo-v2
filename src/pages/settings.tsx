@@ -1,10 +1,10 @@
-import { clerkClient } from "@clerk/nextjs";
 import Head from "next/head";
-import { useRouter } from "next/router";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
-import { api } from "~/utils/api";
+import { api, type RouterOutputs } from "~/utils/api";
+
+type CustomTransaction = RouterOutputs["transaction"]["getCustomTransactions"][0];
 
 const CustomTransactionList = () => {
   const apiUtils = api.useUtils();
@@ -12,7 +12,7 @@ const CustomTransactionList = () => {
   const { mutateAsync: deleteAsync, isLoading: deleteIsLoading } = api.transaction.deleteCustomTransaction.useMutation({
     onSuccess: () => {
       toast.success("Transaction deleted successfully");
-      apiUtils.transaction.getCustomTransactions.invalidate();
+      void apiUtils.transaction.getCustomTransactions.invalidate();
     },
     onError: (error) => {
       toast.error(`Unable to delete transaction: ${error.message}`);
@@ -30,7 +30,7 @@ const CustomTransactionList = () => {
     return (
       <>
         <div className="text-xl font-bold">Your Custom Transactions</div>
-        <div>You don't have any saved transactions.</div>
+        <div>{`You don't have any saved transactions.`}</div>
       </>
     );
   }
@@ -38,15 +38,13 @@ const CustomTransactionList = () => {
     <div className="space-y-4">
       <div className="text-xl font-bold">Your Custom Transactions</div>
       {isLoading && <div>Loading...</div>}
-      {data?.map((transaction) => (
+      {data?.map((transaction: CustomTransaction) => (
         <div key={transaction.id} className="flex space-x-4">
           <div>{transaction.amount}</div>
           <div>{transaction.note}</div>
           <button
             className="bg-red-500 text-white p-2 rounded-md"
-            onClick={async () => {
-              await deleteAsync(transaction.id);
-            }}
+            onClick={() => void deleteAsync(transaction.id)}
             disabled={deleteIsLoading}
           >
             Delete
@@ -64,7 +62,7 @@ const CustomTransactionCreator = () => {
   const { mutateAsync, isLoading } = api.transaction.createCustomTransaction.useMutation({
     onSuccess: () => {
       toast.success("Transaction created successfully");
-      apiUtils.transaction.getCustomTransactions.invalidate();
+      void apiUtils.transaction.getCustomTransactions.invalidate();
     },
     onError: (error) => {
       toast.error(`Unable to save transaction: ${error.message}`);
@@ -74,9 +72,9 @@ const CustomTransactionCreator = () => {
     <div className="space-y-4 flex flex-col justify-center">
       <div className="text-xl font-bold">Create Custom Transaction</div>
       <form
-        onSubmit={async (e) => {
+        onSubmit={(e) => {
           e.preventDefault();
-          await mutateAsync({
+          void mutateAsync({
             amount: amount,
             note: note,
           });
@@ -117,11 +115,6 @@ const CustomTransactionCreator = () => {
 }
 
 export default function Settings() {
-  const router = useRouter();
-  const apiUtils = api.useUtils();
-
-
-
   return (
     <>
       <Head>
@@ -130,7 +123,6 @@ export default function Settings() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <PageLayout>
-        Settings is under construction
         <CustomTransactionCreator />
         <CustomTransactionList />
       </PageLayout>
