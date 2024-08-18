@@ -141,8 +141,7 @@ export default function ClassPage() {
             <div>Name</div>
             <div>Email</div>
             <div>Role</div>
-            <div>Checking</div>
-            <div>Investment</div>
+            <div>Balance</div>
             <div>Remove</div>
           </div>
         </div>
@@ -194,12 +193,6 @@ export default function ClassPage() {
                 {enrollment.checkingAccountBalance ||
                   enrollment.checkingAccountBalance == 0
                   ? `$${enrollment.checkingAccountBalance}`
-                  : "-"}
-              </div>
-              <div>
-                {enrollment.investmentAccountBalance ||
-                  enrollment.investmentAccountBalance == 0
-                  ? `$${enrollment.investmentAccountBalance}`
                   : "-"}
               </div>
               <div>

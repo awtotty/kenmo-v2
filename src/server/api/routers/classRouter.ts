@@ -54,17 +54,6 @@ export const classRouter = createTRPCRouter({
         throw new TRPCClientError("Failed to create class");
       }
 
-      // create two new accounts: one for investment and one for checking
-      const investmentAccount = await ctx.db.account.create({
-        data: {
-          ownerId: ctx.auth.userId,
-          balance: 1000000,
-          interestRate: 0.0,
-          interestPeriodDays: 1,
-          name: `Investment (${classObj.name})`,
-        },
-      });
-
       const checkingAccount = await ctx.db.account.create({
         data: {
           ownerId: ctx.auth.userId,
@@ -81,7 +70,6 @@ export const classRouter = createTRPCRouter({
           userId: ctx.auth.userId,
           classId: classObj.id,
           role: "ADMIN",
-          investmentAccountId: investmentAccount.id,
           checkingAccountId: checkingAccount.id,
         },
       });
@@ -147,7 +135,6 @@ export const classRouter = createTRPCRouter({
           userId: ctx.auth.userId,
           classId: classObj.id,
           role: "STUDENT",
-          investmentAccountId: investmentAccount.id,
           checkingAccountId: checkingAccount.id,
         },
       });

@@ -89,6 +89,14 @@ export const enrollmentRouter = createTRPCRouter({
         throw new Error("Multiple enrollments found");
       }
 
+      if (0 === enrollments.length) {
+        throw new Error("No enrollments found");
+      }
+
+      if (!enrollments[0]) {
+        throw new Error("No enrollments found");
+      }
+
       return await cleanEnrollmentForClient(enrollments[0]);
     }), 
 

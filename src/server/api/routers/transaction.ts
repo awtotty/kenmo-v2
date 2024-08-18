@@ -130,8 +130,8 @@ export const transactionRouter = createTRPCRouter({
       }
 
       const relevantAccounts = enrollments
-        .map((enrollment) => enrollment.investmentAccountId)
-        .concat(enrollments.map((enrollment) => enrollment.checkingAccountId));
+        .map((enrollment) => enrollment.checkingAccountId)
+
       const transactions = await ctx.db.transaction.findMany({
         where: {
           OR: [

@@ -21,8 +21,8 @@ export default function ClassPage() {
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
   const [fromItems, setFromItems] = useState<Account[]>([]);
   const [toItems, setToItems] = useState<Account[]>([]);
-  const [fromSelectedItem, setFromSelectedItem] = useState<Account | null>(null);
-  const [toSelectedItem, setToSelectedItem] = useState<Account | null>(null);
+  const [fromAccountId, setFromAccountId] = useState<string>("");
+  const [toAccountId, setToAccountId] = useState<string>("");
   const [amountInput, setAmountInput] = useState<string>("0.00");
   const [noteInput, setNoteInput] = useState<string>("");
 
@@ -54,11 +54,11 @@ export default function ClassPage() {
     });
 
   const handleTransfer = async () => {
-    if (!fromSelectedItem || !toSelectedItem) {
+    if (fromAccountId === "" || toAccountId === "") {
       toast.error("Please select accounts");
       return;
     }
-    if (fromSelectedItem === toSelectedItem) {
+    if (fromAccountId === toAccountId) {
       toast.error("Cannot transfer to the same account");
       return;
     }
@@ -72,8 +72,8 @@ export default function ClassPage() {
     }
     try {
       await createTransaction({
-        fromAccountId: parseInt(fromSelectedItem, 10),
-        toAccountId: parseInt(toSelectedItem, 10),
+        fromAccountId: parseInt(fromAccountId, 10),
+        toAccountId: parseInt(toAccountId, 10),
         amount: parseFloat(amountInput),
         note: noteInput,
       });
@@ -121,9 +121,9 @@ export default function ClassPage() {
             From:
             <select
               className="rounded border-2 border-gray-200 text-gray-700 w-48"
-              value={fromSelectedItem}
-              defaultValue={fromSelectedItem}
-              onChange={(e) => setFromSelectedItem(e.target.value)}
+              value={fromAccountId}
+              defaultValue={fromAccountId}
+              onChange={(e) => setFromAccountId(e.target.value)}
               disabled={isLoading}
             >
               <option value="">Select an account</option>
@@ -139,8 +139,8 @@ export default function ClassPage() {
             To:
             <select
               className="rounded border-2 border-gray-200 text-gray-700 w-48"
-              value={toSelectedItem}
-              onChange={(e) => setToSelectedItem(e.target.value)}
+              value={toAccountId}
+              onChange={(e) => setToAccountId(e.target.value)}
               disabled={isLoading}
             >
               <option value="">Select an account</option>
