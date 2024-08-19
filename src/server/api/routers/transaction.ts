@@ -5,6 +5,7 @@ import {
 } from "~/server/api/trpc";
 import { TRPCClientError } from "@trpc/client";
 import { type Enrollment } from "@prisma/client/edge";
+import { Role } from "@prisma/client";
 
 export const transactionRouter = createTRPCRouter({
   create: protectedProcedure
@@ -121,7 +122,7 @@ export const transactionRouter = createTRPCRouter({
       const userEnrollment = enrollments.find(
         (enrollment: Enrollment) => enrollment.userId === ctx.auth.userId,
       );
-      if (!userEnrollment || userEnrollment.role !== "ADMIN") {
+      if (!userEnrollment || userEnrollment.role !== Role.ADMIN) {
         throw new TRPCClientError("You are not an admin of this class");
       }
 

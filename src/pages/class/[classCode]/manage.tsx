@@ -68,6 +68,7 @@ export default function ClassPage() {
   const userAccounts = api.account.getAllByClassCode.useQuery({ classCode });
   const classInfo = api.class.getByClassCode.useQuery({ classCode });
 
+  const transactionSelectRefs = useRef<Map<number, HTMLSelectElement>>(new Map());
   const noteInputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
 
   useEffect(() => {
@@ -129,6 +130,31 @@ export default function ClassPage() {
   const tableColumns = ["Transaction", "Note", "Name", "Email", "Balance"];
   const tableColumnWidths = ["300px", "300px", "100px", "50px", "100px"];
 
+  const handleTransaction = async (enrollment: Enrollment) => {
+    // TODO: Replace with with a useRef
+    const id = parseInt((document.getElementById(`amount-${enrollment.id}`) as HTMLSelectElement).value);
+    const tempTransaction = possibleTransactions.find((transaction) => transaction.id == id);
+    if (!tempTransaction) {
+      toast.error("Could not find transaction");
+      return;
+    };
+    const fromAccountId = userAccounts.data?.[0]?.id ?? -1
+    const toAccountId = enrollment.checkingAccountId ?? -1
+    // check for note override
+    if (noteInputRefs.current.get(enrollment.id)?.value != "") {
+      tempTransaction.note = noteInputRefs.current.get(enrollment.id)?.value ?? tempTransaction.note;
+    }
+    await createTransaction({
+      fromAccountId,
+      toAccountId,
+      ...tempTransaction
+    });
+    // clear the note 
+    if (noteInputRefs.current.get(enrollment.id) != undefined) {
+      noteInputRefs.current.get(enrollment.id)!.value = "";
+    }
+  };
+
   return (
     <>
       <Head>
@@ -139,14 +165,92 @@ export default function ClassPage() {
       <PageLayout>
         <div>{classInfo.data?.className}</div>
         <div>Class code: {classCode}</div>
-        {/* list all enrollments */}
+
+        {/* Here begins the management table */}
         <div className="overflow-x-auto">
           <table className="md:min-w-full table-auto border-collapse border border-gray-300">
             <thead>
               <tr>
-                {tableColumns.map((column, index) => (
-                  <th key={index} className={`min-w-[${tableColumnWidths[index]}] border border-gray-300 bg-gray-700 p-2`}>{column}</th>
-                ))
+                <th className="w-1/2 border border-gray-300 bg-gray-700 p-2">Apply transaction to all</th>
+                <th className="w-1/2 border border-gray-300 bg-gray-700 p-2">Apply note to all</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="border border-gray-300 p-2">
+                  <select
+                    className="rounded border border-gray-400 bg-white px-2 py-1 text-gray-700"
+                    name="amount"
+                    id={`amount-all`}
+                    defaultValue={undefined}
+                  >
+                    <option value={undefined}>Select a transaction</option>
+                    {possibleTransactions.map((transaction) => (
+                      <option
+                        key={transaction.id}
+                        value={transaction.id}
+                      >
+                        {`$${transaction.amount} ${transaction.note}`}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    className="rounded bg-blue-400 px-2 py-1 font-bold text-white hover:bg-blue-700"
+                    onClick={() => {
+                      transactionSelectRefs.current.forEach((select) => {
+                        select.value = (document.getElementById(`amount-all`) as HTMLSelectElement).value;
+                      });
+                    }}
+                  >
+                    Apply
+                  </button>
+                </td>
+                <td className="border border-gray-300 p-2">
+                  <input
+                    placeholder="Note"
+                    className="rounded border border-gray-400 bg-white px-2 py-1 text-gray-700"
+                    type="text"
+                    id={`note-all`}
+                  />
+                  <button
+                    className="rounded bg-blue-400 px-2 py-1 font-bold text-white hover:bg-blue-700"
+                    onClick={() => {
+                      noteInputRefs.current.forEach((input) => {
+                        input.value = (document.getElementById(`note-all`) as HTMLInputElement).value;
+                      });
+                    }}
+                  >
+                    Apply
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <table className="md:min-w-full table-auto border-collapse border border-gray-300">
+            <thead>
+              <tr>
+                {tableColumns.map((column, index) => {
+                  if (column == "Transaction") {
+                    return (
+                      <th key={index} className={`min-w-[${tableColumnWidths[index]}] border border-gray-300 bg-gray-700 p-2`}>
+                        {column}
+                        <button
+                          className="rounded bg-blue-400 px-2 py-1 font-bold text-white hover:bg-blue-700"
+                          onClick={() => {
+                            enrollments?.forEach((enrollment) => {
+                              void handleTransaction(enrollment);
+                            });
+                          }}
+                        >
+                          Transfer all
+                        </button>
+                      </th>
+                    );
+                  }
+                  return (
+                    <th key={index} className={`min-w-[${tableColumnWidths[index]}] border border-gray-300 bg-gray-700 p-2`}>{column}</th>
+                  );
+                })
                 }
               </tr>
             </thead>
@@ -158,6 +262,11 @@ export default function ClassPage() {
                 >
                   <td className="border border-gray-300 p-2">
                     <select
+                      ref={(el) => {
+                        if (el) {
+                          transactionSelectRefs.current.set(enrollment.id, el)
+                        }
+                      }}
                       className="rounded border border-gray-400 bg-white px-2 py-1 text-gray-700"
                       name="amount"
                       id={`amount-${enrollment.id}`}
@@ -176,29 +285,7 @@ export default function ClassPage() {
                     <button
                       className="rounded bg-blue-400 px-2 py-1 font-bold text-white hover:bg-blue-700"
                       disabled={createIsLoading}
-                      onClick={() => {
-                        // use the value of the select to create a transaction
-                        const id = parseInt((document.getElementById(`amount-${enrollment.id}`) as HTMLSelectElement).value);
-                        const tempTransaction = possibleTransactions.find((transaction) => transaction.id == id);
-                        if (!tempTransaction) {
-                          toast.error("Could not find transaction");
-                          return;
-                        };
-                        const fromAccountId = userAccounts.data?.[0]?.id ?? -1
-                        const toAccountId = enrollment.checkingAccountId ?? -1
-                        // check for note override
-                        if (noteInputRefs.current.get(enrollment.id)?.value != "") {
-                          tempTransaction.note = noteInputRefs.current.get(enrollment.id)?.value ?? tempTransaction.note;
-                        }
-                        void createTransaction({
-                          fromAccountId,
-                          toAccountId,
-                          ...tempTransaction
-                        });
-                        if (noteInputRefs.current.get(enrollment.id) != undefined) {
-                          noteInputRefs.current.get(enrollment.id)!.value = "";
-                        }
-                      }}
+                      onClick={() => void handleTransaction(enrollment)}
                     >
                       Transfer
                     </button>
@@ -226,43 +313,44 @@ export default function ClassPage() {
                       ? `$${enrollment.checkingAccountBalance}`
                       : "-"}
                   </td>
-                  {/*<div>
-                <button
-                  className="rounded bg-red-400 px-2 py-1 font-bold text-white hover:bg-red-700"
-                  disabled={deleteIsLoading}
-                  onClick={() => {
-                    void deleteEnrollment({ id: enrollment.id });
-                  }}
-                >
-                  Remove
-                </button>
-              </div>
-              */}
+                  {/* TODO: decide if we want to allow removal of enrollments
+                  <td>
+                    <button
+                      className="rounded bg-red-400 px-2 py-1 font-bold text-white hover:bg-red-700"
+                      disabled={deleteIsLoading}
+                      onClick={() => {
+                        void deleteEnrollment({ id: enrollment.id });
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </td>
+                  */}
                 </tr>
               ))}
             </tbody>
-
           </table>
         </div>
+        {/* Here ends the management table */}
 
         <div>
           <TransactionFeed classCode={classCode} />
         </div>
 
 
-        {/*
-          <div>
-            <button
-              className="rounded bg-red-400 px-4 py-2 font-bold text-white hover:bg-red-700"
-              disabled={deleteClassIsLoading}
-              onClick={() => {
-                void deleteClass({ classCode });
-              }}
-            >
-              Delete Class
-            </button>
-          </div>
-          */}
+        {/* TODO: decide if we want to allow deletion of classes
+        <div>
+          <button
+            className="rounded bg-red-400 px-4 py-2 font-bold text-white hover:bg-red-700"
+            disabled={deleteClassIsLoading}
+            onClick={() => {
+              void deleteClass({ classCode });
+            }}
+          >
+            Delete Class
+          </button>
+        </div>
+        */}
       </PageLayout>
     </>
   );
