@@ -6,6 +6,7 @@ import {
 } from "~/server/api/trpc";
 import type { Enrollment } from "@prisma/client/edge";
 import { db } from "~/server/db";
+import { Role } from "@prisma/client";
 import { clerkClient } from "@clerk/nextjs";
 
 const cleanEnrollmentForClient = async (enrollment: Enrollment) => {
@@ -131,7 +132,7 @@ export const enrollmentRouter = createTRPCRouter({
       }
 
       const adminIds = enrollments
-        .filter((enrollment: Enrollment) => enrollment.role === "ADMIN")
+        .filter((enrollment: Enrollment) => enrollment.role === Role.ADMIN)
         .map((enrollment: Enrollment) => enrollment.userId);
 
       if (!adminIds.includes(ctx.auth?.userId ?? null)) {
@@ -140,8 +141,9 @@ export const enrollmentRouter = createTRPCRouter({
 
       // Use Promise.all to await all promises returned by addClassNameToEnrollment
       return await Promise.all(
-        enrollments.map(
-          async (enrollment: Enrollment) => await cleanEnrollmentForClient(enrollment),
+        enrollments
+          .filter((enrollment: Enrollment) => enrollment.role != Role.ADMIN)
+          .map(async (enrollment: Enrollment) => await cleanEnrollmentForClient(enrollment),
         ),
       );
     }),
@@ -162,7 +164,7 @@ export const enrollmentRouter = createTRPCRouter({
       const adminIds = await ctx.db.enrollment.findMany({
         where: {
           classId: enrollment.classId,
-          role: "ADMIN",
+          role: Role.ADMIN,
         },
       });
 
