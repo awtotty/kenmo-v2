@@ -52,7 +52,3 @@ export default async function handler(
     res.status(500).json({ message: `Failed to apply interest to accounts` });
   }
 }
-
-export const config = {
-  runtime: 'edge', 
-};
