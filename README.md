@@ -33,6 +33,9 @@
 - Sentry for monitoring
   - We starting using this at work, and it's pretty amazing. 
   - Allows for high granularity in logs and reports down to the user level. 
+- Cron jobs in Vercel are very particular
+  - Cron jobs can be triggered by a POST request to the endpoint. (curl -X POST https://kenmo-v2.vercel.app/api/cron -H "Authorization: Bearer $CRON_SECRET")
+  - For Vercel to recognize a cron job, it has to be defined in `/vercel.json` (not `/public/vercel.json`, which doesn't work for some reason)
 
 # Create T3 App
 
