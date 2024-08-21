@@ -4,16 +4,21 @@ import { type Account } from "@prisma/client/edge";
 
 export const dynamic = 'force-dynamic'; // static by default, unless reading the request
 
-const WOLRD_BANK_ACCOUNT_ID = 1000;
+const WORLD_BANK_ACCOUNT_ID = 1000;
 
 const applyInterest = async (account: Account, db: PrismaClient) => {
-  if (account.interestRate == 0) {
+  const canEarnInterest = 
+    account.balance > 0 &&
+    account.interestRate > 0 &&
+    account.id !== WORLD_BANK_ACCOUNT_ID;
+
+  if (!canEarnInterest) {
     return;
   }
+
   const interest = account.balance * account.interestRate;
   const newBalance = account.balance + interest;
 
-  // db doesn't seem to be updating.... 
   try {
     await db.account.update({
       where: { id: account.id },
@@ -21,7 +26,7 @@ const applyInterest = async (account: Account, db: PrismaClient) => {
     });
     await db.transaction.create({
       data: {
-        fromAccountId: WOLRD_BANK_ACCOUNT_ID,
+        fromAccountId: WORLD_BANK_ACCOUNT_ID,
         toAccountId: account.id,
         amount: newBalance,
         note: `You earned $${interest} in interest! 🎉`,
