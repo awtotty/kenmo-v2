@@ -35,8 +35,8 @@ export default function ClassPage() {
   // query the accounts with this class code and set the fromItems and toItems
   const { data: userAccounts } =
     api.account.getAllByClassCode.useQuery({ classCode });
-  const { data: classBankAccount } =
-    api.account.getBankAccountByClassCode.useQuery({ classCode });
+  const { data: classBankAccounts } =
+    api.account.getBankAccountsByClassCode.useQuery({ classCode });
 
   const { mutateAsync: createTransaction, isLoading } =
     api.transaction.create.useMutation({
@@ -54,14 +54,14 @@ export default function ClassPage() {
 
   const handleTransfer = async () => {
     if (fromAccountId === "" || toAccountId === "") {
-      toast.error("Please select accounts");
+      toast.error("Couldn't find accounts. Try refreshing the page.");
       return;
     }
     if (fromAccountId === toAccountId) {
       toast.error("Cannot transfer to the same account");
       return;
     }
-    if (parseFloat(amountInput) <= 0) {
+    if (amountInput == "" || parseFloat(amountInput) <= 0) {
       toast.error("Amount must be greater than $0");
       return;
     }
@@ -78,6 +78,7 @@ export default function ClassPage() {
       });
       await apiUtils.account.getAllByClassCode.invalidate({ classCode });
       setAmountInput("0.00");
+      setNoteInput("");
     } catch (e) {
     }
   };
@@ -85,14 +86,17 @@ export default function ClassPage() {
   useEffect(() => {
     if (userAccounts) {
       setFromItems(userAccounts);
+      // WARNING: this is hacky and just chooses the first account
+      setFromAccountId(userAccounts[0]?.id.toString() ?? "");
     }
   }, [userAccounts]);
 
   useEffect(() => {
-    if (classBankAccount) {
-      setToItems(classBankAccount);
+    if (classBankAccounts) {
+      setToItems(classBankAccounts);
+      setToAccountId(classBankAccounts[0]?.id.toString() ?? "");
     }
-  }, [classBankAccount]);
+  }, [classBankAccounts]);
 
   useEffect(() => {
     if (!classCode) {
@@ -113,11 +117,12 @@ export default function ClassPage() {
       </Head>
       <PageLayout>
         <div>{classInfo.data?.className}</div>
-        <div>{`Class Code: ${classCode}`}</div>
 
-        <div className="flex-col">
-          <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2">
-            From:
+        <div className="flex flex-col w-full items-center border border-blue-900 rounded p-4 md:max-w-2xl">
+          <div className="flex flex-row justify-between gap-4 py-2">
+          {`From: ${userAccounts ? userAccounts[0]?.name ?? "No account found" : "Loading..."} `}
+          {`$${userAccounts ? userAccounts[0]?.balance ?? "??" : "Loading..."} `}
+            {/*
             <select
               className="rounded border-2 border-gray-200 text-gray-700 w-48"
               value={fromAccountId}
@@ -133,9 +138,11 @@ export default function ClassPage() {
                 >{`${enrollment?.firstName}${enrollment?.firstName ? "'s" : ""} ${item.name} ($${item.balance})`}</option>
               ))}
             </select>
+            */}
           </div>
-          <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2">
-            To:
+          <div className="flex flex-row justify-between gap-4 py-2">
+          {`To: ${classBankAccounts ? "Class Bank" ?? "No account found" : "Loading..."} `}
+            {/*
             <select
               className="rounded border-2 border-gray-200 text-gray-700 w-48"
               value={toAccountId}
@@ -150,8 +157,9 @@ export default function ClassPage() {
                 >{`${enrollment?.className} Bank ${item.id}`}</option>
               ))}
             </select>
+            */}
           </div>
-          <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2 w-48">
+          <div className="flex flex-row justify-between gap-4 py-2 w-48">
             Amount:
             <input
               className="rounded border-2 border-gray-200 text-gray-700"
@@ -161,7 +169,7 @@ export default function ClassPage() {
               disabled={isLoading}
             />
           </div>
-          <div className="flex flex-row justify-between gap-4 border-b-2 border-gray-200 py-2 w-48">
+          <div className="flex flex-row justify-between gap-4 py-2 w-48">
             Note:
             <input
               className="rounded border-2 border-gray-200 text-gray-700"
@@ -172,17 +180,17 @@ export default function ClassPage() {
               disabled={isLoading}
             />
           </div>
-          <div className="flex flex-row justify-between gap-4 border-gray-200 py-2">
-            <button
-              className="rounded bg-slate-400 px-4 py-2 font-bold text-white hover:bg-blue-700"
-              disabled={isLoading}
-              onClick={() => void handleTransfer()}
-            >
-              Transfer
-            </button>
-          </div>
         </div>
-      </PageLayout>
+        <div className="flex flex-row justify-between border-gray-200">
+          <button
+            className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-600"
+            disabled={isLoading}
+            onClick={() => void handleTransfer()}
+          >
+            Transfer
+          </button>
+        </div>
+      </PageLayout >
     </>
   );
 }

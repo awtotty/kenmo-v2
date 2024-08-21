@@ -3,35 +3,45 @@
 
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import Image from "next/image";
+
+const navButtonStyle = "hover:text-slate-500";
 
 export const Nav = () => {
   return (
     <>
-      <div className="flex w-full items-center border p-4 md:max-w-2xl">
+      <div className="flex w-full items-center border border-blue-900 rounded p-4 md:max-w-2xl">
         <ul className="flex">
           <li className="mr-6">
-            <Link className="text-blue-500 hover:text-blue-800" href="/">
+            <Link className="" href="/">
+              <Image src="/logo/svg/logo-no-background.svg" alt="Kenmo" width={80} height={80} />
+            </Link>
+          </li>
+          <li className="mr-6">
+            <Link className={navButtonStyle} href="/">
               Home
             </Link>
           </li>
+          {/*
           <li className="mr-6">
-            <Link className="cursor-not-allowed text-gray-400" href="#">
+            <Link className={navButtonStyle} href="#">
               Activity
             </Link>
           </li>
+          */}
           <li className="mr-6">
-            <Link className="text-blue-500 hover:text-blue-800" href="/join">
+            <Link className={navButtonStyle} href="/join">
               Join
             </Link>
           </li>
+          <div className="mr-6">
+            <Link className={navButtonStyle} href="/settings">
+              {`Settings `}
+            </Link>
+          </div>
         </ul>
         <div className="flex-grow"></div>
         <div className="float-right flex justify-center">
-          <div className="flex justify-center p-1">
-            <Link className="text-blue-500 hover:text-blue-800" href="/settings">
-              Settings
-            </Link>
-          </div>
           <UserButton afterSignOutUrl="/" />
         </div>
       </div>

@@ -36,6 +36,14 @@
 - Cron jobs in Vercel are very particular
   - Cron jobs can be triggered by a POST request to the endpoint. (curl -X POST https://kenmo-v2.vercel.app/api/cron -H "Authorization: Bearer $CRON_SECRET")
   - For Vercel to recognize a cron job, it has to be defined in `/vercel.json` (not `/public/vercel.json`, which doesn't work for some reason)
+- Color themes
+  - Text: slate-100
+  - Background: slate-900
+  - Primary: blue-500, hover:blue-600
+  - Secondary: slate-400, hover:slate-500
+  - Outline: blue-900
+- Logos
+  - This was a great tool for a free logo https://logo.com/dashboard
 
 # Create T3 App
 

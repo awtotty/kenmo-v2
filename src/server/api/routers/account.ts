@@ -85,7 +85,7 @@ export const accountRouter = createTRPCRouter({
       });
     }),
 
-  getBankAccountByClassCode: protectedProcedure
+  getBankAccountsByClassCode: protectedProcedure
     .input(
       z.object({
         classCode: z.string(),

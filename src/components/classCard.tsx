@@ -3,6 +3,8 @@ import Link from "next/link";
 import { type RouterOutputs } from "~/utils/api";
 import { ROLE } from "~/utils/constants";
 
+const cardStyle = "block w-full md:max-w-2xl p-6 border rounded shadow border-blue-900 border-blue-900 hover:bg-blue-950";
+
 type EnrollmentWithClassInfo =
   RouterOutputs["enrollment"]["getAllCurrentUser"][0];
 export const ClassCard = ({
@@ -17,8 +19,7 @@ export const ClassCard = ({
   if (enrollment.role === ROLE.ADMIN) {
     return (
       <>
-
-        <Link href={`/class/${enrollment.classCode}/manage`} className="block w-full md:max-w-2xl p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+        <Link href={`/class/${enrollment.classCode}/manage`} className={cardStyle}>
 
           <div className="float-left flex-col">
             <div className="text-left">{enrollment.className}</div>
@@ -34,13 +35,13 @@ export const ClassCard = ({
   } else if (enrollment.role === ROLE.STUDENT) {
     return (
       <>
-        <Link href={`/class/${enrollment.classCode}/transfer`} className="block w-full md:max-w-2xl p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700">
+        <Link href={`/class/${enrollment.classCode}/transfer`} className={cardStyle}>
 
           <div className="float-left flex-col">
             <div className="text-left">{enrollment.className}</div>
           </div>
           <div className="flex-grow"></div>
-          <div className="float-right">
+          <div className="float-right justify-center text-right">
             <div>
               Balance:{" "}
               {enrollment.checkingAccountBalance ??
@@ -49,7 +50,7 @@ export const ClassCard = ({
                 : "-"}
             </div>
             <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-              Send Money
+              Send
             </button>
           </div>
 
