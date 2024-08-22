@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Link from "next/link";
 import { ClassCard } from "~/components/classCard";
 import { PageLayout } from "~/components/layout";
 import { type RouterOutputs, api } from "~/utils/api";
@@ -13,7 +14,15 @@ const Enrollments = () => {
   if (isLoading) return <div>Loading...</div>;
 
   if (!enrollments || enrollments.length == 0)
-    return <div>No enrollments found.</div>;
+    return (
+        <div>
+          <Link href="/join">
+            <button className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded">
+              Join a class
+            </button>
+          </Link>
+        </div>
+    );
 
   return (
     <>
