@@ -22,7 +22,7 @@ export default function ClassPage() {
   const [toItems, setToItems] = useState<Account[]>([]);
   const [fromAccountId, setFromAccountId] = useState<string>("");
   const [toAccountId, setToAccountId] = useState<string>("");
-  const [amountInput, setAmountInput] = useState<string>("0.00");
+  const [amountInput, setAmountInput] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState<string>("");
 
   const user = api.user.getCurrentUser.useQuery().data;
@@ -61,6 +61,10 @@ export default function ClassPage() {
     }
     if (fromAccountId === toAccountId) {
       toast.error("Cannot transfer to the same account");
+      return;
+    }
+    if (!amountInput) {
+      toast.error("Please enter an amount");
       return;
     }
     if (amountInput == "" || parseFloat(amountInput) <= 0) {
@@ -163,19 +167,21 @@ export default function ClassPage() {
             */}
           </div>
           <div className="flex flex-row justify-between gap-4 py-2 w-48">
-            Amount:
+            Amount
+            <span className="-mr-5">$</span>
             <input
-              className="rounded border-2 border-gray-200 text-gray-700"
-              type="number"
-              value={amountInput}
+              className="flex float-right w-1/2 border border-gray-300 rounded-md p-2 text-slate-700"
+              type="text"
+              id="amount"
+              value={amountInput ?? undefined}
+              placeholder="0.00"
               onChange={(e) => setAmountInput(e.target.value)}
-              disabled={isLoading}
             />
           </div>
           <div className="flex flex-row justify-between gap-4 py-2 w-48">
-            Note:
+            Note
             <input
-              className="rounded border-2 border-gray-200 text-gray-700"
+              className="flex float-right w-full border border-gray-300 rounded-md p-2 text-slate-700"
               type="text"
               value={noteInput}
               placeholder="What is this for?"
@@ -183,15 +189,15 @@ export default function ClassPage() {
               disabled={isLoading}
             />
           </div>
-        </div>
-        <div className="flex flex-row justify-between border-gray-200">
-          <button
-            className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-600"
-            disabled={isLoading}
-            onClick={() => void handleTransfer()}
-          >
-            Transfer
-          </button>
+          <div className="flex flex-row justify-between py-2 border-gray-200">
+            <button
+              className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-600"
+              disabled={isLoading}
+              onClick={() => void handleTransfer()}
+            >
+              Transfer
+            </button>
+          </div>
         </div>
       </PageLayout >
     </>

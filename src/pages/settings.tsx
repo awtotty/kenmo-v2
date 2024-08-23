@@ -3,6 +3,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
 import { api, type RouterOutputs } from "~/utils/api";
+import { TrashIcon } from "@heroicons/react/20/solid";
 
 type CustomTransaction = RouterOutputs["transaction"]["getCustomTransactions"][0];
 
@@ -35,29 +36,62 @@ const CustomTransactionList = () => {
     );
   }
   return (
-    <div className="space-y-4">
-      <div className="text-xl font-bold">Your Custom Transactions</div>
-      {isLoading && <div>Loading...</div>}
-      {data?.map((transaction: CustomTransaction) => (
-        <div key={transaction.id} className="flex space-x-4">
-          <div>{transaction.amount}</div>
-          <div>{transaction.note}</div>
-          <button
-            className="bg-red-500 text-white p-2 rounded-md"
-            onClick={() => void deleteAsync(transaction.id)}
-            disabled={deleteIsLoading}
-          >
-            Delete
-          </button>
-        </div>
-      ))}
-    </div>
+    <>
+      <div className="flex flex-col w-full items-center md:max-w-2xl">
+        <div>Your Custom Transactions</div>
+        <table className="md:min-w-full table-auto border-collapse border border-gray-300">
+          <thead>
+            <tr>
+              <th className="w-1/4 border border-gray-300 bg-gray-700 p-2">Amount</th>
+              <th className="w-3/4 border border-gray-300 bg-gray-700 p-2">Note</th>
+              <th className="min-w-[50px] border border-gray-300 bg-gray-700 p-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {data?.map((transaction: CustomTransaction) => {
+              return (
+                <tr
+                  key={transaction.id}
+                >
+                  <td
+                    className="w-1/8 border border-gray-300 p-2"
+                  >
+                    {transaction.amount}
+                  </td>
+                  <td
+                    className="w-1/8 border border-gray-300 p-2"
+                  >
+                    {transaction.note}
+                  </td>
+                  <td
+                    className="w-1/8 border border-gray-300 p-2"
+                  >
+                    <button
+                      className="bg-red-400 hover:bg-red-500 p-2 rounded justify-center"
+                      onClick={() => {
+                        if (!confirm("Are you sure you want to delete this transaction?")) {
+                          return;
+                        }
+                        void deleteAsync(transaction.id);
+                      }}
+                      disabled={deleteIsLoading}
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table >
+      </div >
+    </>
   );
 }
 
 const CustomTransactionCreator = () => {
   const apiUtils = api.useUtils();
-  const [amount, setAmount] = useState(0.0);
+  const [amount, setAmount] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const { mutateAsync, isLoading } = api.transaction.createCustomTransaction.useMutation({
     onSuccess: () => {
@@ -69,48 +103,59 @@ const CustomTransactionCreator = () => {
     }
   });
   return (
-    <div className="space-y-4 flex flex-col justify-center">
-      <div className="text-xl font-bold">Create Custom Transaction</div>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void mutateAsync({
-            amount: amount,
-            note: note,
-          });
-        }}
-      >
-        <div className="space-y-2 flex">
-          <label className="p-4" htmlFor="amount">Amount</label>
-          <input
-            className="w-1/2 border-2 border-gray-300 rounded-md p-2 text-slate-700"
-            type="number"
-            id="amount"
-            value={amount}
-            onChange={(e) => setAmount(parseFloat(e.target.value))}
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="p-4" htmlFor="note">Note</label>
-          <input
-            className="w-1/2 border-2 border-gray-300 rounded-md p-2 text-slate-700"
-            type="text"
-            id="note"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-          />
-        </div>
-        <div>
-          <button
-            className="bg-blue-500 text-white p-2 rounded-md"
-            type="submit"
-            disabled={isLoading}
+    <>
+      <div className="flex flex-col w-full items-center border border-blue-900 rounded p-4 md:max-w-2xl">
+        <div>Create Custom Transaction</div>
+        <div className="flex flex-row w-justify-between gap-4 py-2">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!amount) {
+                toast.error("Amount is required");
+                return;
+              }
+              void mutateAsync({
+                amount: parseFloat(amount),
+                note: note,
+              });
+            }}
           >
-            Save
-          </button>
+            <div className="flex flow-root p-2">
+              <label className="flex w-1/2 float-left justify-between py-2" htmlFor="amount">Amount</label>
+              <span className="absolute -mr-10">$</span>
+              <input
+                className="flex float-right w-1/2 border border-gray-300 rounded-md p-2 text-slate-700"
+                type="text"
+                id="amount"
+                value={amount ?? undefined}
+                placeholder="0.00"
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </div>
+            <div className="flex flow-root p-2">
+              <label className="flex w-1/2 float-left justify-between py-2" htmlFor="note">Note</label>
+              <input
+                className="flex float-right w-1/2 border border-gray-300 rounded-md p-2 text-slate-700"
+                type="text"
+                id="note"
+                value={note}
+                placeholder="Note"
+                onChange={(e) => setNote(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-center justify-center">
+              <button
+                className="bg-blue-500 text-white p-2 rounded-md"
+                type="submit"
+                disabled={isLoading}
+              >
+                Save
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
-    </div>
+      </div>
+    </>
   );
 }
 
