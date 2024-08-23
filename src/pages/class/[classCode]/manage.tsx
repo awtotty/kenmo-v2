@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
 import { api } from "~/utils/api";
+import { type User } from "@clerk/clerk-sdk-node";
 import { type RouterOutputs } from "~/utils/api";
 import { TrashIcon, ChevronDownIcon } from "@heroicons/react/20/solid";
 
@@ -12,11 +13,41 @@ type Transaction = RouterOutputs["transaction"]["getAllByClassCode"][0];
 type CustomTransaction = RouterOutputs["transaction"]["getCustomTransactions"][0];
 
 const TransactionFeed = (prop: { classCode: string }) => {
-  const { data: transactions, isLoading } =
+  const { data: transactions, isLoading: isLoadingTransactions } =
     api.transaction.getAllByClassCode.useQuery(prop.classCode);
+  const { data: accounts, isLoading: isLoadingAccounts } = api.account.getAllInClassByClassCode.useQuery({ classCode: prop.classCode });
+  const { data: allUsers, isLoading: isLoadingAllUsers } = api.user.getAllByClassCode.useQuery({ classCode: prop.classCode });
+  const [transactionsData, setTransactionsData] = useState<(Transaction & { fromUser: User | undefined, toUser: User | undefined })[]>([]);
+
+  // transactions have fromAccountId and toAccountId
+  // accounts have ownerId (which is a userId)
+  // users have firstName and lastName
+  // we want to find the firstName and lastName for the fromUser and toUser for each transaction 
+  useEffect(() => {
+    const newTransactionData = transactions?.map((transaction) => {
+      const fromAccount = accounts?.find((account) => account.id == transaction.fromAccountId);
+      const toAccount = accounts?.find((account) => account.id == transaction.toAccountId);
+      const fromUser = allUsers?.find((user) => user.id == fromAccount?.ownerId);
+      const toUser = allUsers?.find((user) => user.id == toAccount?.ownerId);
+      return {
+        ...transaction,
+        fromUser: fromUser,
+        toUser: toUser
+      };
+    });
+    if (newTransactionData) {
+      setTransactionsData(newTransactionData);
+    }
+  }, [transactions, accounts, allUsers]);
+
+  const isLoading = isLoadingTransactions || isLoadingAccounts || isLoadingAllUsers;
   if (isLoading) return <div>Loading...</div>;
+
   if (!transactions || transactions.length == 0)
     return <div>No transactions found.</div>;
+
+  if (!allUsers || allUsers.length == 0)
+    return <div>No users found.</div>;
 
   return (
     <>
@@ -36,13 +67,17 @@ const TransactionFeed = (prop: { classCode: string }) => {
             </tr>
           </thead>
           <tbody>
-            {transactions?.map((transaction: Transaction) => (
+            {transactionsData?.map((transaction) => (
               <tr
                 key={transaction.id}
               >
                 <td>{transaction.createdAt.toLocaleString()}</td>
-                <td>{transaction.fromAccountId}</td>
-                <td>{transaction.toAccountId}</td>
+                <td>
+                  {`${transaction.fromUser?.firstName ?? ""} ${transaction.fromUser?.lastName ?? ""}`}
+                </td>
+                <td>
+                  {`${transaction.toUser?.firstName ?? ""} ${transaction.toUser?.lastName ?? ""}`}
+                </td>
                 <td>${transaction.amount}</td>
                 <td>{transaction.note}</td>
               </tr>
