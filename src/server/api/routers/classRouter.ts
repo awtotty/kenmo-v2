@@ -89,7 +89,7 @@ export const classRouter = createTRPCRouter({
 
       const classObj = await ctx.db.class.findFirst({
         where: {
-          classCode: input.classCode,
+          classCode: input.classCode.toUpperCase(),
         },
       });
 
@@ -112,9 +112,9 @@ export const classRouter = createTRPCRouter({
         data: {
           ownerId: ctx.auth.userId,
           balance: 100, // TODO: make this a param in class creation
-          interestRate: 1.0,
+          interestRate: 0.2,
           interestPeriodDays: 1,
-          name: `Checking (${classObj.name})`,
+          name: `My account (${classObj.name})`,
         },
       });
 
