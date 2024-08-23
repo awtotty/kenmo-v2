@@ -2,6 +2,7 @@ import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { type RouterOutputs } from "~/utils/api";
 import { ROLE } from "~/utils/constants";
+import { formatBalance } from "~/utils/helpers";
 
 const cardStyle = "block w-full md:max-w-2xl p-6 border rounded shadow border-blue-900 border-blue-900 hover:bg-blue-950";
 
@@ -44,10 +45,7 @@ export const ClassCard = ({
           <div className="float-right justify-center text-right">
             <div>
               Balance:{" "}
-              {enrollment.checkingAccountBalance ??
-                enrollment.checkingAccountBalance == 0
-                ? `$${enrollment.checkingAccountBalance}`
-                : "-"}
+              {formatBalance(enrollment.checkingAccountBalance)}
             </div>
             <button className="bg-blue-500 hover:bg-blue-700 py-2 px-4 rounded">
               Send

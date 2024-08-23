@@ -1,20 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { PrismaClient } from "@prisma/client";
 import { type Account } from "@prisma/client/edge";
+import { toFixedTrunc } from "~/utils/helpers";
 
 export const dynamic = 'force-dynamic'; // static by default, unless reading the request
 
 const WORLD_BANK_ACCOUNT_ID = 1000;
-
-// Helper function to truncate a number to a fixed number of decimal places
-const toFixed = (num: number, fixed: number) => {
-    const re = new RegExp('^-?\\d+(?:\.\\d{0,' + (fixed || -1) + '})?');
-    const result = num.toString().match(re)
-    if (!result) {
-      throw new Error(`Failed to truncate number ${num} to ${fixed} decimal places`);
-    }
-    return result[0];
-}
 
 const applyInterest = async (account: Account, db: PrismaClient) => {
   const canEarnInterest = 
@@ -26,7 +17,7 @@ const applyInterest = async (account: Account, db: PrismaClient) => {
     return;
   }
 
-  const interest = toFixed(account.balance * account.interestRate, 2);
+  const interest = toFixedTrunc(account.balance * account.interestRate, 2);
   const newBalance = account.balance + parseFloat(interest);
 
   try {

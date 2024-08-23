@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
 import { type RouterOutputs, api } from "~/utils/api";
+import { formatBalance } from "~/utils/helpers";
 
 type Account = RouterOutputs["account"]["getAllByClassCode"][0];
 type Enrollment = RouterOutputs["enrollment"]["getCurrentUserByClassCode"];
@@ -128,7 +129,7 @@ export default function ClassPage() {
         <div className="flex flex-col w-full items-center border border-blue-900 rounded p-4 md:max-w-2xl">
           <div className="flex flex-row justify-between gap-4 py-2">
             {`From: ${userAccounts ? userAccounts[0]?.name ?? "No account found" : "Loading..."} `}
-            {`$${userAccounts ? userAccounts[0]?.balance ?? "??" : "Loading..."} `}
+            {userAccounts ? formatBalance(userAccounts[0]?.balance) : "Loading..."} 
             {/*
             <select
               className="rounded border-2 border-gray-200 text-gray-700 w-48"

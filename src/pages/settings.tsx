@@ -3,6 +3,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
 import { api, type RouterOutputs } from "~/utils/api";
+import { formatBalance } from "~/utils/helpers";
 import { TrashIcon } from "@heroicons/react/20/solid";
 
 type CustomTransaction = RouterOutputs["transaction"]["getCustomTransactions"][0];
@@ -56,7 +57,7 @@ const CustomTransactionList = () => {
                   <td
                     className="w-1/8 border border-gray-300 p-2"
                   >
-                    {transaction.amount}
+                    {formatBalance(transaction.amount)}
                   </td>
                   <td
                     className="w-1/8 border border-gray-300 p-2"

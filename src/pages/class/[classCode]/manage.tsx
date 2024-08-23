@@ -6,6 +6,7 @@ import { PageLayout } from "~/components/layout";
 import { api } from "~/utils/api";
 import { type User } from "@clerk/clerk-sdk-node";
 import { type RouterOutputs } from "~/utils/api";
+import { formatBalance, formatCurrency } from "~/utils/helpers";
 import { TrashIcon, ChevronDownIcon } from "@heroicons/react/20/solid";
 
 type Enrollment = RouterOutputs["enrollment"]["getAllByClassCode"][0];
@@ -78,7 +79,7 @@ const TransactionFeed = (prop: { classCode: string }) => {
                 <td>
                   {`${transaction.toUser?.firstName ?? ""} ${transaction.toUser?.lastName ?? ""}`}
                 </td>
-                <td>${transaction.amount}</td>
+                <td>{formatBalance(transaction.amount)}</td>
                 <td>{transaction.note}</td>
               </tr>
             ))}
@@ -230,7 +231,7 @@ export default function ClassPage() {
                             className="flex w-full"
                             value={transaction.id}
                           >
-                            {`$${transaction.amount} ${transaction.note}`}
+                            {`${formatCurrency(transaction.amount)}  (${transaction.note})`}
                           </option>
                         ))}
                       </select>
@@ -342,7 +343,7 @@ export default function ClassPage() {
                               key={transaction.id}
                               value={transaction.id}
                             >
-                              {`$${transaction.amount} ${transaction.note}`}
+                              {`${formatCurrency(transaction.amount)}  (${transaction.note})`}
                             </option>
                           ))}
                         </select>
@@ -376,10 +377,7 @@ export default function ClassPage() {
                   </td>
                   <td className="border border-gray-300 p-2">{enrollment.email}</td>
                   <td className="border border-gray-300 p-2">
-                    {enrollment.checkingAccountBalance ??
-                      enrollment.checkingAccountBalance == 0
-                      ? `$${enrollment.checkingAccountBalance}`
-                      : "-"}
+                    {formatBalance(enrollment.checkingAccountBalance)}
                   </td>
                   <td>
                     <button
