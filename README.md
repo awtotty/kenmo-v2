@@ -41,6 +41,7 @@
   - Background: slate-900
   - Primary: blue-500, hover:blue-600
   - Secondary: slate-400, hover:slate-500
+  - Descrucive: red-400, hover:red-500
   - Outline: blue-900
 - Logos
   - This was a great tool for a free logo https://logo.com/dashboard
