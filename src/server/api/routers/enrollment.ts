@@ -168,6 +168,10 @@ export const enrollmentRouter = createTRPCRouter({
         },
       });
 
+      if (!adminIds) {
+        throw new Error("No admins found for this class");
+      }
+
       if (
         !adminIds
           .map((enrollment: Enrollment) => enrollment.userId)
