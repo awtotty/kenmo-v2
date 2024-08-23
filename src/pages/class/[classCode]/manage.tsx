@@ -261,7 +261,7 @@ export default function ClassPage() {
                     </div>
                     <div className="flex w-1/4 float-right">
                       <button
-                        className="flex w-full justify-center rounded bg-blue-500 px-2 py-1 font-bold text-white hover:bg-blue-600"
+                        className="flex w-full justify-center rounded bg-blue-500 px-2 py-1 hover:bg-blue-600"
                         onClick={() => {
                           noteInputRefs.current.forEach((input) => {
                             input.value = (document.getElementById(`note-all`) as HTMLInputElement).value;
@@ -295,7 +295,7 @@ export default function ClassPage() {
                           </div>
                           <div className="flex float-right">
                             <button
-                              className="rounded bg-blue-500 px-2 py-1 font-bold text-white hover:bg-blue-600"
+                              className="rounded bg-blue-500 px-2 py-1 hover:bg-blue-600"
                               onClick={() => {
                                 enrollments?.forEach((enrollment) => {
                                   void handleTransaction(enrollment);
@@ -383,7 +383,7 @@ export default function ClassPage() {
                   </td>
                   <td>
                     <button
-                      className="rounded bg-red-400 px-2 py-1 font-bold text-white hover:bg-red-500"
+                      className="rounded bg-red-400 px-2 py-1 hover:bg-red-500"
                       disabled={deleteIsLoading}
                       onClick={() => {
                         if (!confirm(`Are you sure you want to remove ${enrollment.firstName} ${enrollment.lastName} from this class?`)) return;

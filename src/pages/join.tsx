@@ -26,11 +26,11 @@ const JoinClass = () => {
 
   return (
     <>
-      <div>Join an existing class with a class code from your teacher:</div>
+      <div>Join an existing class with a class code from your teacher</div>
       <div>
         <input
           placeholder="Class Code"
-          className="text-size-2xl flex-grow p-2 text-slate-800 outline-none"
+          className="text-size-2xl flex-grow p-2 text-slate-800 outline-none rounded"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={isLoading}
@@ -44,7 +44,7 @@ const JoinClass = () => {
           }}
         />
         <button
-          className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
+          className="rounded bg-blue-500 px-4 py-2 hover:bg-blue-700"
           disabled={isLoading}
           onClick={() => {
             try {
@@ -81,11 +81,11 @@ const CreateClass = () => {
 
   return (
     <>
-      <div>Create a new class for your students:</div>
+      <div>Create a new class for your students</div>
       <div>
         <input
           placeholder="Class Name"
-          className="text-size-2xl flex-grow p-2 text-slate-800 outline-none"
+          className="text-size-2xl flex-grow p-2 text-slate-800 outline-none rounded"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={isLoading}
@@ -99,7 +99,7 @@ const CreateClass = () => {
           }}
         />
         <button
-          className="rounded bg-slate-400 px-4 py-2 font-bold text-white hover:bg-blue-700"
+          className="rounded bg-slate-400 px-4 py-2 hover:bg-slate-500"
           disabled={isLoading}
           onClick={() => {
             try {

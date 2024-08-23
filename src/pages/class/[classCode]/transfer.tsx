@@ -191,7 +191,7 @@ export default function ClassPage() {
           </div>
           <div className="flex flex-row justify-between py-2 border-gray-200">
             <button
-              className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-600"
+              className="rounded bg-blue-500 px-4 py-2 hover:bg-blue-600"
               disabled={isLoading}
               onClick={() => void handleTransfer()}
             >

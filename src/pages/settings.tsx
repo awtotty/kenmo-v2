@@ -22,7 +22,7 @@ const CustomTransactionList = () => {
   if (isLoading) {
     return (
       <>
-        <div className="text-xl font-bold">Your Custom Transactions</div>
+        <div className="text-xl">Your Custom Transactions</div>
         <div>Loading...</div>
       </>
     );
@@ -30,7 +30,7 @@ const CustomTransactionList = () => {
   if (!data) {
     return (
       <>
-        <div className="text-xl font-bold">Your Custom Transactions</div>
+        <div className="text-xl">Your Custom Transactions</div>
         <div>{`You don't have any saved transactions.`}</div>
       </>
     );
