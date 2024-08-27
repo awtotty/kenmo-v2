@@ -19,6 +19,9 @@ const applyInterest = async (account: Account, db: PrismaClient) => {
 
   const interest = toFixedTrunc(account.balance * account.interestRate, 2);
   const newBalance = account.balance + parseFloat(interest);
+  const note = account.balance * account.interestRate < 0.01 ? 
+    `You earned fractions of a cent in interest! 🎉` :
+    `You earned $${interest} in interest! 🎉`;
 
   try {
     await db.account.update({
@@ -30,7 +33,7 @@ const applyInterest = async (account: Account, db: PrismaClient) => {
         fromAccountId: WORLD_BANK_ACCOUNT_ID,
         toAccountId: account.id,
         amount: newBalance,
-        note: `You earned $${interest} in interest! 🎉`,
+        note: note,
       },
     });
   } catch (e) {

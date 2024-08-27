@@ -112,7 +112,7 @@ export const classRouter = createTRPCRouter({
         data: {
           ownerId: ctx.auth.userId,
           balance: 100, // TODO: make this a param in class creation
-          interestRate: 0.2,
+          interestRate: 0.2/365,
           interestPeriodDays: 1,
           name: `My account (${classObj.name})`,
         },
