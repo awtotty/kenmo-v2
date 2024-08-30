@@ -37,7 +37,7 @@ const applyInterest = async (account: Account, db: PrismaClient) => {
       },
     });
   } catch (e) {
-    console.error(`Failed to apply interest for account ${account.id} e`);
+    console.error(`Failed to apply interest for account ${account.id}`, e);
   }
 };
 
