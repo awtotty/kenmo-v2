@@ -120,6 +120,17 @@ export default function ClassPage() {
     if (!enrollments || enrollments.length == 0) {
       setLoadingState("invalidEnrollments");
     } else {
+      enrollments.sort((a, b) => { 
+        const nameA = a.firstName?.toUpperCase() ?? "";
+        const nameB = b.firstName?.toUpperCase() ?? "";
+        if (nameA < nameB) {
+          return -1;
+        } else if (nameA > nameB) {
+          return 1;
+        } else {
+          return 0;
+        }
+      });
       setLoadingState("loaded");
     }
   }, [enrollments]);
