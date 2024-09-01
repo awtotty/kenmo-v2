@@ -1,13 +1,13 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
 import { api } from "~/utils/api";
 import { type User } from "@clerk/clerk-sdk-node";
 import { type RouterOutputs } from "~/utils/api";
 import { formatBalance, formatCurrency } from "~/utils/helpers";
-import { TrashIcon, ChevronDownIcon } from "@heroicons/react/20/solid";
+import { TrashIcon, ChevronDownIcon, BarsArrowDownIcon } from "@heroicons/react/20/solid";
 
 type Enrollment = RouterOutputs["enrollment"]["getAllByClassCode"][0];
 type Transaction = RouterOutputs["transaction"]["getAllByClassCode"][0];
@@ -104,6 +104,7 @@ export default function ClassPage() {
   const user = api.user.getCurrentUser.useQuery();
   const userAccounts = api.account.getAllByClassCode.useQuery({ classCode });
   const classInfo = api.class.getByClassCode.useQuery({ classCode });
+  const [sortBy, setSortBy] = useState<"firstName" | "lastName">("lastName");
 
   const transactionSelectRefs = useRef<Map<number, HTMLSelectElement>>(new Map());
   const noteInputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
@@ -120,20 +121,44 @@ export default function ClassPage() {
     if (!enrollments || enrollments.length == 0) {
       setLoadingState("invalidEnrollments");
     } else {
-      enrollments.sort((a, b) => { 
-        const nameA = a.firstName?.toUpperCase() ?? "";
-        const nameB = b.firstName?.toUpperCase() ?? "";
-        if (nameA < nameB) {
-          return -1;
-        } else if (nameA > nameB) {
-          return 1;
-        } else {
-          return 0;
-        }
-      });
       setLoadingState("loaded");
     }
   }, [enrollments]);
+
+  const sortByFirstName = (a: Enrollment, b: Enrollment) => {
+    const nameA = a.firstName?.toUpperCase() ?? "";
+    const nameB = b.firstName?.toUpperCase() ?? "";
+    if (nameA < nameB) {
+      return -1;
+    } else if (nameA > nameB) {
+      return 1;
+    } else {
+      return 0;
+    }
+  };
+  const sortByLastName = (a: Enrollment, b: Enrollment) => {
+    const nameA = a.lastName?.toUpperCase() ?? "";
+    const nameB = b.lastName?.toUpperCase() ?? "";
+    if (nameA < nameB) {
+      return -1;
+    } else if (nameA > nameB) {
+      return 1;
+    } else {
+      return 0;
+    }
+  };
+
+  const sortedEnrollments = useMemo(() => {
+    if (sortBy == "lastName") {
+      return enrollments?.sort(sortByLastName);
+    }
+    if (sortBy == "firstName") {
+      return enrollments?.sort(sortByFirstName);
+    }
+    else {
+      return enrollments;
+    }
+  }, [enrollments, sortBy]);
 
   useEffect(() => {
     if (customTransactions.data && customTransactions.data.length != 0) {
@@ -309,7 +334,7 @@ export default function ClassPage() {
                             <button
                               className="rounded bg-blue-500 px-2 py-1 hover:bg-blue-600"
                               onClick={() => {
-                                enrollments?.forEach((enrollment) => {
+                                sortedEnrollments?.forEach((enrollment) => {
                                   void handleTransaction(enrollment);
                                 });
                               }}
@@ -321,15 +346,37 @@ export default function ClassPage() {
                       </th>
                     );
                   }
-                  return (
-                    <th key={index} className={`min-w-[${tableColumnWidths[index]}] border border-gray-300 bg-gray-700 p-2`}>{column}</th>
-                  );
+                  else if (column == "Name") {
+                    return (
+                      <th key={index} className={`min-w-[${tableColumnWidths[index]}] border border-gray-300 bg-gray-700 p-2`}>
+                        <div className="flex w-full flow-root">
+                          <div className="flex float-left">
+                            {column}
+                          </div>
+                          <div className="flex float-right">
+                            <BarsArrowDownIcon  
+                              className="h-5 w-5"
+                              onClick={() => {
+                                setSortBy(sortBy == "lastName" ? "firstName" : "lastName");
+                                toast.success(`Sorted by ${sortBy == "lastName" ? "first name" : "last name"}`);
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </th>
+                    );
+                  }
+                  else {
+                    return (
+                      <th key={index} className={`min-w-[${tableColumnWidths[index]}] border border-gray-300 bg-gray-700 p-2`}>{column}</th>
+                    );
+                  }
                 })
                 }
               </tr>
             </thead>
             <tbody>
-              {enrollments?.map((enrollment: Enrollment) => (
+              {sortedEnrollments?.map((enrollment: Enrollment) => (
                 <tr
                   className="w-full"
                   key={enrollment.id}
