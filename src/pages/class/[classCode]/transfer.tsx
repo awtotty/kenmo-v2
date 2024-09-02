@@ -25,6 +25,8 @@ export default function ClassPage() {
   const [toAccountId, setToAccountId] = useState<string>("");
   const [amountInput, setAmountInput] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState<string>("");
+  const { data: transactionsData } = 
+    api.transaction.getAllByAccountId.useQuery(parseInt(fromAccountId, 10));
 
   const user = api.user.getCurrentUser.useQuery().data;
 
@@ -129,7 +131,7 @@ export default function ClassPage() {
         <div className="flex flex-col w-full items-center border border-blue-900 rounded p-4 md:max-w-2xl">
           <div className="flex flex-row justify-between gap-4 py-2">
             {`From: ${userAccounts ? userAccounts[0]?.name ?? "No account found" : "Loading..."} `}
-            {userAccounts ? formatBalance(userAccounts[0]?.balance) : "Loading..."} 
+            {userAccounts ? formatBalance(userAccounts[0]?.balance) : "Loading..."}
             {/*
             <select
               className="rounded border-2 border-gray-200 text-gray-700 w-48"
@@ -198,6 +200,35 @@ export default function ClassPage() {
             >
               Transfer
             </button>
+          </div>
+        </div>
+
+        <div>
+          <div className="">
+            Recent Transactions
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="md:min-w-full table-auto border-collapse border border-gray-300">
+              <thead>
+                <tr>
+                  <th className="min-w-[200px] border border-gray-300 bg-gray-700 p-2">Date</th>
+                  <th className="min-w-[50px] border border-gray-300 bg-gray-700 p-2">Amount</th>
+                  <th className="min-w-[100px] border border-gray-300 bg-gray-700 p-2">Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactionsData?.map((transaction) => (
+                  <tr
+                    key={transaction.id}
+                  >
+                    <td>{transaction.createdAt.toLocaleString()}</td>
+                    <td>{formatBalance(transaction.amount)}</td>
+                    <td>{transaction.note}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </PageLayout >
