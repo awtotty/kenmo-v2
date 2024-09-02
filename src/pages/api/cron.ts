@@ -7,54 +7,89 @@ export const dynamic = 'force-dynamic'; // static by default, unless reading the
 
 const WORLD_BANK_ACCOUNT_ID = 1000;
 
-const applyInterest = async (account: Account, db: PrismaClient) => {
-  const canEarnInterest = 
-    account.balance > 0 &&
-    account.interestRate > 0 &&
-    account.id !== WORLD_BANK_ACCOUNT_ID;
+const applyInterest = async (accountIds?: number[]) => {
+  const db = new PrismaClient();
 
-  if (!canEarnInterest) {
-    return;
-  }
-
-  const interest = toFixedTrunc(account.balance * account.interestRate, 2);
-  const newBalance = account.balance + parseFloat(interest);
-  const note = account.balance * account.interestRate < 0.01 ? 
-    `You earned fractions of a cent in interest! 🎉` :
-    `You earned $${interest} in interest! 🎉`;
-
-  try {
-    await db.account.update({
-      where: { id: account.id },
-      data: { balance: newBalance },
-    });
-    await db.transaction.create({
-      data: {
-        fromAccountId: WORLD_BANK_ACCOUNT_ID,
-        toAccountId: account.id,
-        amount: newBalance,
-        note: note,
+  // if no accountIds are passed, apply interest to all accounts
+  const accounts = accountIds ? await db.account.findMany({
+    where: {
+      id: {
+        in: accountIds,
       },
+    },
+  }) : await db.account.findMany();
+
+  // create a list of transaction data to send to db all at once
+  const transactions = accounts.map((account: Account) => {
+    const canEarnInterest =
+      account.balance > 0 &&
+      account.interestRate > 0 &&
+      account.id !== WORLD_BANK_ACCOUNT_ID;
+
+    if (!canEarnInterest) {
+      return;
+    }
+
+    const interest = toFixedTrunc(account.balance * account.interestRate, 2);
+    const newBalance = account.balance + parseFloat(interest);
+    const note = account.balance * account.interestRate < 0.01 ?
+      `You earned fractions of a cent in interest! 🎉` :
+      `You earned $${interest} in interest! 🎉`;
+
+    return {
+      fromAccountId: WORLD_BANK_ACCOUNT_ID,
+      toAccountId: account.id,
+      amount: newBalance,
+      note: note,
+    };
+  });
+
+  // update account balances all at once
+  const accountUpdates = accounts.map((account: Account, index: number) => {
+    const transaction = transactions[index];
+    if (!transaction) {
+      return;
+    }
+
+    return {
+      where: { id: account.id },
+      data: { balance: transaction.amount },
+    };
+  });
+
+  // send to db all at once
+  try {
+    await db.transaction.createMany({
+      //@ts-expect-error - transactions.filter(Boolean) removes undefined values
+      data: transactions.filter(Boolean),
     });
+
+    await Promise.all(
+      accountUpdates
+        .filter(Boolean)
+        .map(async (update) => { 
+          if (!update) return;
+          await db.account.update(update)
+        }),
+    );
   } catch (e) {
-    console.error(`Failed to apply interest for account ${account.id}`, e);
+    console.error(`Failed to apply interest for accounts`, e);
   }
 };
 
-export default async function handler(
+export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).end('Unauthorized');
   }
 
+  // test accounts
+  // const accountIds = [38, 36, 41, 47, 53, 48];
+
   try {
-    const prisma = new PrismaClient();
-    const accounts = await prisma.account.findMany();
-    accounts.forEach((account: Account) => {
-      void applyInterest(account, prisma);
-    });
+    void applyInterest();
     res.status(200).json({ message: `Applied interest to accounts` });
   } catch (e) {
     console.error(e);
