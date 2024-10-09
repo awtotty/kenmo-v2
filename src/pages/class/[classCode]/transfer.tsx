@@ -11,6 +11,9 @@ type Account = RouterOutputs["account"]["getAllByClassCode"][0];
 type Enrollment = RouterOutputs["enrollment"]["getCurrentUserByClassCode"];
 
 export default function ClassPage() {
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
+
   const router = useRouter();
   const apiUtils = api.useUtils();
   const classCode =
@@ -25,8 +28,12 @@ export default function ClassPage() {
   const [toAccountId, setToAccountId] = useState<string>("");
   const [amountInput, setAmountInput] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState<string>("");
-  const { data: transactionsData } = 
-    api.transaction.getAllByAccountId.useQuery(parseInt(fromAccountId, 10));
+  const { data: transactionsData } =
+    api.transaction.getAllByAccountId.useQuery({
+      accountId: parseInt(fromAccountId, 10),
+      page: page,
+      pageSize: pageSize,
+    });
 
   const user = api.user.getCurrentUser.useQuery().data;
 
@@ -114,6 +121,14 @@ export default function ClassPage() {
       setLoadingState("loaded");
     }
   }, [classCode]);
+
+  const totalPages = Math.ceil((transactionsData?.totalRecords ?? 0) / pageSize);
+  const handleNextPage = () => {
+    if (page < totalPages) setPage(page + 1);
+  };
+  const handlePrevPage = () => {
+    if (page > 1) setPage(page - 1);
+  };
 
   if (loadingState === "loading") return <div>Loading...</div>;
 
@@ -218,7 +233,7 @@ export default function ClassPage() {
                 </tr>
               </thead>
               <tbody>
-                {transactionsData?.map((transaction) => (
+                {transactionsData?.transactions.map((transaction) => (
                   <tr
                     key={transaction.id}
                   >
@@ -229,6 +244,27 @@ export default function ClassPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex justify-between items-center mt-4">
+            <button
+              className="bg-gray-300 px-4 py-2 rounded"
+              disabled={page === 1}
+              onClick={handlePrevPage}
+            >
+              Previous
+            </button>
+            <p>
+              Page {page} of {totalPages}
+            </p>
+            <button
+              className="bg-gray-300 px-4 py-2 rounded"
+              disabled={page === totalPages}
+              onClick={handleNextPage}
+            >
+              Next
+            </button>
           </div>
         </div>
       </PageLayout >
