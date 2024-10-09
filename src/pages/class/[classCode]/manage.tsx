@@ -10,22 +10,38 @@ import { formatBalance, formatCurrency } from "~/utils/helpers";
 import { TrashIcon, ChevronDownIcon, BarsArrowDownIcon } from "@heroicons/react/20/solid";
 
 type Enrollment = RouterOutputs["enrollment"]["getAllByClassCode"][0];
-type Transaction = RouterOutputs["transaction"]["getAllByClassCode"][0];
+type Transaction = RouterOutputs["transaction"]["getAllByClassCode"]["transactions"][0];
 type CustomTransaction = RouterOutputs["transaction"]["getCustomTransactions"][0];
 
 const TransactionFeed = (prop: { classCode: string }) => {
-  const { data: transactions, isLoading: isLoadingTransactions } =
-    api.transaction.getAllByClassCode.useQuery(prop.classCode);
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
+  const { data: data, isLoading: isLoadingTransactions } =
+    api.transaction.getAllByClassCode.useQuery({
+      classCode: prop.classCode,
+      page: page,
+      pageSize: pageSize,
+    });
   const { data: accounts, isLoading: isLoadingAccounts } = api.account.getAllInClassByClassCode.useQuery({ classCode: prop.classCode });
   const { data: allUsers, isLoading: isLoadingAllUsers } = api.user.getAllByClassCode.useQuery({ classCode: prop.classCode });
   const [transactionsData, setTransactionsData] = useState<(Transaction & { fromUser: User | undefined, toUser: User | undefined })[]>([]);
+
+  const totalPages = Math.ceil((data?.totalRecords ?? 0) / pageSize);
+
+  const handleNextPage = () => {
+    if (page < totalPages) setPage(page + 1);
+  };
+
+  const handlePrevPage = () => {
+    if (page > 1) setPage(page - 1);
+  };
 
   // transactions have fromAccountId and toAccountId
   // accounts have ownerId (which is a userId)
   // users have firstName and lastName
   // we want to find the firstName and lastName for the fromUser and toUser for each transaction 
   useEffect(() => {
-    const newTransactionData = transactions?.map((transaction) => {
+    const newTransactionData = data?.transactions?.map((transaction: Transaction) => {
       const fromAccount = accounts?.find((account) => account.id == transaction.fromAccountId);
       const toAccount = accounts?.find((account) => account.id == transaction.toAccountId);
       const fromUser = allUsers?.find((user) => user.id == fromAccount?.ownerId);
@@ -39,12 +55,12 @@ const TransactionFeed = (prop: { classCode: string }) => {
     if (newTransactionData) {
       setTransactionsData(newTransactionData);
     }
-  }, [transactions, accounts, allUsers]);
+  }, [data?.transactions, accounts, allUsers]);
 
   const isLoading = isLoadingTransactions || isLoadingAccounts || isLoadingAllUsers;
   if (isLoading) return <div>Loading...</div>;
 
-  if (!transactions || transactions.length == 0)
+  if (!data?.transactions || data?.transactions.length == 0)
     return <div>No transactions found.</div>;
 
   if (!allUsers || allUsers.length == 0)
@@ -85,6 +101,27 @@ const TransactionFeed = (prop: { classCode: string }) => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-between items-center mt-4">
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          disabled={page === 1}
+          onClick={handlePrevPage}
+        >
+          Previous
+        </button>
+        <p>
+          Page {page} of {totalPages}
+        </p>
+        <button
+          className="bg-gray-300 px-4 py-2 rounded"
+          disabled={page === totalPages}
+          onClick={handleNextPage}
+        >
+          Next
+        </button>
       </div>
     </>
   );
@@ -354,7 +391,7 @@ export default function ClassPage() {
                             {column}
                           </div>
                           <div className="flex float-right">
-                            <BarsArrowDownIcon  
+                            <BarsArrowDownIcon
                               className="h-5 w-5"
                               onClick={() => {
                                 setSortBy(sortBy == "lastName" ? "firstName" : "lastName");

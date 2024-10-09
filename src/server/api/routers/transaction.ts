@@ -98,11 +98,17 @@ export const transactionRouter = createTRPCRouter({
     }),
 
   getAllByClassCode: protectedProcedure
-    .input(z.string())
+    .input(
+      z.object({
+        classCode: z.string(),
+        page: z.number().min(1).optional().default(1),
+        pageSize: z.number().min(1).optional().default(50),
+      })
+    )
     .query(async ({ ctx, input }) => {
       const classObj = await ctx.db.class.findFirst({
         where: {
-          classCode: input,
+          classCode: input.classCode,
         },
       });
       if (!classObj) {
@@ -144,7 +150,8 @@ export const transactionRouter = createTRPCRouter({
             },
           ],
         },
-        take: 50,
+        skip: (input.page - 1) * input.pageSize,
+        take: input.pageSize,
         orderBy: {
           createdAt: "desc",
         },
@@ -153,15 +160,41 @@ export const transactionRouter = createTRPCRouter({
         throw new TRPCClientError("No transactions found");
       }
 
-      return transactions;
+      const totalRecords = await ctx.db.transaction.count({
+        where: {
+          OR: [
+            {
+              fromAccountId: {
+                in: relevantAccounts,
+              },
+            },
+            {
+              toAccountId: {
+                in: relevantAccounts,
+              },
+            },
+          ],
+        },
+      });
+
+      return {
+        transactions: transactions,
+        totalRecords: totalRecords,
+      };
     }),
 
   getAllByAccountId: protectedProcedure
-    .input(z.number())
+    .input(
+      z.object({
+        accountId: z.number(),
+        page: z.number().min(1).optional().default(1),
+        pageSize: z.number().min(1).optional().default(50),
+      })
+    )
     .query(async ({ ctx, input }) => {
       const account = await ctx.db.account.findFirst({
         where: {
-          id: input,
+          id: input.accountId,
           ownerId: ctx.auth.userId,
         },
       });
@@ -173,14 +206,15 @@ export const transactionRouter = createTRPCRouter({
         where: {
           OR: [
             {
-              fromAccountId: input,
+              fromAccountId: input.accountId,
             },
             {
-              toAccountId: input,
+              toAccountId: input.accountId,
             },
           ],
         },
-        take: 50,
+        skip: (input.page - 1) * input.pageSize,
+        take: input.pageSize,
         orderBy: {
           createdAt: "desc",
         },
@@ -189,7 +223,23 @@ export const transactionRouter = createTRPCRouter({
         throw new TRPCClientError("No transactions found");
       }
 
-      return transactions;
+      const totalRecords = await ctx.db.transaction.count({
+        where: {
+          OR: [
+            {
+              fromAccountId: input.accountId,
+            },
+            {
+              toAccountId: input.accountId,
+            },
+          ],
+        },
+      });
+
+      return {
+        transactions: transactions,
+        totalRecords: totalRecords,
+      };
     }),
 
   getCustomTransactions: protectedProcedure
@@ -252,7 +302,7 @@ export const transactionRouter = createTRPCRouter({
         },
       });
       return true;
-    }), 
+    }),
 
   // testInterest: publicProcedure
   //   .mutation(async ({ ctx }) => {
