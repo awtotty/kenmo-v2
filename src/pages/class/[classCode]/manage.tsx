@@ -106,7 +106,7 @@ const TransactionFeed = (prop: { classCode: string }) => {
       {/* Pagination Controls */}
       <div className="flex justify-between items-center mt-4">
         <button
-          className="bg-gray-300 px-4 py-2 rounded"
+          className="bg-slate-400 hover:bg-slate-500 px-4 py-2 rounded"
           disabled={page === 1}
           onClick={handlePrevPage}
         >
@@ -116,7 +116,7 @@ const TransactionFeed = (prop: { classCode: string }) => {
           Page {page} of {totalPages}
         </p>
         <button
-          className="bg-gray-300 px-4 py-2 rounded"
+          className="bg-slate-400 hover:bg-slate-500 px-4 py-2 rounded"
           disabled={page === totalPages}
           onClick={handleNextPage}
         >
