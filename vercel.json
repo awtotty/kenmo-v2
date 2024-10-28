@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron",
+      "path": "/api/cron?secret=cron_364857D58A4EE9FAC21CDDF6281D5&accounts=38,36",
       "schedule": "0 1 * * *"
     }
   ]

@@ -77,19 +77,20 @@ const applyInterest = async (accountIds?: number[]) => {
   }
 };
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (req.query.secret !== process.env.CRON_SECRET) {
     return res.status(401).end('Unauthorized');
   }
 
-  // test accounts
-  // const accountIds = [38, 36, 41, 47, 53, 48];
+  // test account ids: 38, 36, 41, 47, 53, 48
+  const accountIdsParam = req.query.accounts as string;
+  const accountIds = accountIdsParam ? accountIdsParam.split(',').map(Number) : undefined;
 
   try {
-    void applyInterest();
+    await applyInterest(accountIds);
     res.status(200).json({ message: `Applied interest to accounts` });
   } catch (e) {
     console.error(e);
