@@ -143,6 +143,7 @@ export default function ClassPage() {
   const classInfo = api.class.getByClassCode.useQuery({ classCode });
   const [sortBy, setSortBy] = useState<"firstName" | "lastName">("lastName");
 
+  const onTheFlyAmountRefs = useRef<Map<number, HTMLInputElement>>(new Map());
   const transactionSelectRefs = useRef<Map<number, HTMLSelectElement>>(new Map());
   const noteInputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
 
@@ -237,8 +238,8 @@ export default function ClassPage() {
 
   if (loadingState === "loading") return <div>Loading...</div>;
 
-  const tableColumns = ["Transaction", "Note", "Name", "Email", "Balance", ""];
-  const tableColumnWidths = ["300px", "300px", "100px", "50px", "100px", "20px"];
+  const tableColumns = ["On the Fly", "Transaction", "Note", "Name", "Email", "Balance", ""];
+  const tableColumnWidths = ["300px", "300px", "300px", "100px", "50px", "100px", "20px"];
 
   const handleTransaction = async (enrollment: Enrollment) => {
     // TODO: Replace with with a useRef
@@ -264,6 +265,27 @@ export default function ClassPage() {
       noteInputRefs.current.get(enrollment.id)!.value = "";
     }
   };
+
+  const handleOnTheFlyTransaction = async (enrollment: Enrollment) => {
+    const fromAccountId = userAccounts.data?.[0]?.id ?? -1
+    const toAccountId = enrollment.checkingAccountId ?? -1
+    const amount = parseFloat((document.getElementById(`amount-${enrollment.id}`) as HTMLInputElement).value);
+    const note = (document.getElementById(`note-${enrollment.id}`) as HTMLInputElement).value;
+    if (isNaN(amount)) {
+      toast.error("Invalid amount");
+      return;
+    }
+    await createTransaction({
+      fromAccountId,
+      toAccountId,
+      amount,
+      note
+    });
+    // clear the note 
+    if (noteInputRefs.current.get(enrollment.id) != undefined) {
+      noteInputRefs.current.get(enrollment.id)!.value = "";
+    }
+  }
 
   return (
     <>
@@ -360,7 +382,31 @@ export default function ClassPage() {
             <thead>
               <tr>
                 {tableColumns.map((column, index) => {
-                  if (column == "Transaction") {
+                  if (column == "On the Fly") {
+                    return (
+                      <th key={index} className={`min-w-[${tableColumnWidths[index]}] border border-gray-300 bg-gray-700 p-2`}>
+                        <div className="flex w-full flow-root">
+                          <div className="flex w-1/2 float-left">
+                            {column}
+                          </div>
+                          <div className="flex w-1/2 float-right justify-end">
+                            <button
+                              className="rounded bg-blue-500 px-2 py-1 hover:bg-blue-600"
+                              onClick={() => {
+                                sortedEnrollments?.forEach((enrollment) => {
+                                  if (onTheFlyAmountRefs.current.get(enrollment.id)?.value == "") return;
+                                  void handleOnTheFlyTransaction(enrollment);
+                                });
+                              }}
+                            >
+                              Transfer all
+                            </button>
+                          </div>
+                        </div>
+                      </th>
+                    );
+                  }
+                  else if (column == "Transaction") {
                     return (
                       <th key={index} className={`min-w-[${tableColumnWidths[index]}] border border-gray-300 bg-gray-700 p-2`}>
                         <div className="flex w-full flow-root">
@@ -418,6 +464,33 @@ export default function ClassPage() {
                   className="w-full"
                   key={enrollment.id}
                 >
+                  <td className="border border-gray-300 p-2">
+                    <div className="flex w-full flow-root">
+                      <span className="flex float-left">$</span>
+                      <div className="flex float-left">
+                        <input
+                          ref={(el) => {
+                            if (el) {
+                              onTheFlyAmountRefs.current.set(enrollment.id, el)
+                            }
+                          }}
+                          placeholder="Amount"
+                          className="rounded border border-gray-400 bg-white px-2 py-1 text-gray-700"
+                          type="number"
+                          id={`amount-${enrollment.id}`}
+                        />
+                      </div>
+                      <div className="flex float-right">
+                        <button
+                          className="rounded bg-blue-500 px-2 py-1 hover:bg-blue-600"
+                          disabled={createIsLoading}
+                          onClick={() => void handleOnTheFlyTransaction(enrollment)}
+                        >
+                          Transfer
+                        </button>
+                      </div>
+                    </div>
+                  </td>
                   <td className="border border-gray-300 p-2">
                     <div className="flex w-full flow-root">
                       <div className="flex float-left">
