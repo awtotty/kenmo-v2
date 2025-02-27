@@ -269,7 +269,7 @@ export default function ClassPage() {
   const handleOnTheFlyTransaction = async (enrollment: Enrollment) => {
     const fromAccountId = userAccounts.data?.[0]?.id ?? -1
     const toAccountId = enrollment.checkingAccountId ?? -1
-    const amount = parseFloat((document.getElementById(`amount-${enrollment.id}`) as HTMLInputElement).value);
+    const amount = parseFloat((document.getElementById(`amount-${enrollment.id}-on-the-fly`) as HTMLInputElement).value);
     const note = (document.getElementById(`note-${enrollment.id}`) as HTMLInputElement).value;
     if (isNaN(amount)) {
       toast.error("Invalid amount");
@@ -477,7 +477,7 @@ export default function ClassPage() {
                           placeholder="Amount"
                           className="rounded border border-gray-400 bg-white px-2 py-1 text-gray-700"
                           type="number"
-                          id={`amount-${enrollment.id}`}
+                          id={`amount-${enrollment.id}-on-the-fly`}
                         />
                       </div>
                       <div className="flex float-right">
