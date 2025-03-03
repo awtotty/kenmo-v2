@@ -269,8 +269,8 @@ export const transactionRouter = createTRPCRouter({
           ownerId: ctx.auth.userId,
         },
       });
-      if (customTransactionsList.length >= 10) {
-        throw new TRPCClientError("You have reached the limit of 10 custom transactions");
+      if (customTransactionsList.length >= 100) {
+        throw new TRPCClientError("You have reached the limit of 100 custom transactions");
       }
       const customTransaction = await ctx.db.customTransaction.create({
         data: {
