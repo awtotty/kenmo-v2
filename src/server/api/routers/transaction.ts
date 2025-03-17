@@ -248,7 +248,6 @@ export const transactionRouter = createTRPCRouter({
         where: {
           ownerId: ctx.auth.userId,
         },
-        take: 10,
         orderBy: {
           createdAt: "desc",
         },
