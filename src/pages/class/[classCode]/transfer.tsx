@@ -166,7 +166,7 @@ export default function ClassPage() {
             */}
           </div>
           <div className="flex flex-row justify-between gap-4 py-2">
-            {`To: ${classBankAccounts ? "Teacher" ?? "No account found" : "Loading..."} `}
+            {`To: ${classBankAccounts ? "Teacher" : "Loading..."} `}
             {/*
             <select
               className="rounded border-2 border-gray-200 text-gray-700 w-48"
