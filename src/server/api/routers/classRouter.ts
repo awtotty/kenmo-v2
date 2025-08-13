@@ -25,6 +25,7 @@ export const classRouter = createTRPCRouter({
             userId: ctx.auth?.userId ?? null,
             class: {
               name: input.className,
+              deletedAt: null,
             },
           },
         });
@@ -38,7 +39,7 @@ export const classRouter = createTRPCRouter({
 
       // generate new class code
       let code = Math.random().toString(36).substring(2, 8).toUpperCase();
-      while (await ctx.db.class.findFirst({ where: { classCode: code } })) {
+      while (await ctx.db.class.findFirst({ where: { classCode: code, deletedAt: null } })) {
         code = Math.random().toString(36).substring(2, 8).toUpperCase();
       }
 
@@ -90,6 +91,7 @@ export const classRouter = createTRPCRouter({
       const classObj = await ctx.db.class.findFirst({
         where: {
           classCode: input.classCode.toUpperCase(),
+          deletedAt: null,
         },
       });
 
@@ -144,6 +146,7 @@ export const classRouter = createTRPCRouter({
       const classObj = await ctx.db.class.findFirst({
         where: {
           classCode: input.classCode,
+          deletedAt: null,
         },
       });
 
@@ -163,16 +166,13 @@ export const classRouter = createTRPCRouter({
         throw new TRPCClientError("You are not an admin of this class");
       }
 
-      // delete all enrollments for this class
-      await ctx.db.enrollment.deleteMany({
-        where: {
-          classId: classObj.id,
-        },
-      });
-
-      await ctx.db.class.delete({
+      // soft delete the class by setting deletedAt timestamp
+      await ctx.db.class.update({
         where: {
           id: classObj.id,
+        },
+        data: {
+          deletedAt: new Date(),
         },
       });
 
@@ -189,6 +189,7 @@ export const classRouter = createTRPCRouter({
       const classObj = await ctx.db.class.findFirst({
         where: {
           classCode: input.classCode,
+          deletedAt: null,
         },
       });
 

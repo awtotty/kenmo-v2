@@ -13,6 +13,7 @@ const cleanEnrollmentForClient = async (enrollment: Enrollment) => {
   const classObj = await db.class.findFirst({
     where: {
       id: enrollment.classId,
+      deletedAt: null,
     },
   });
 
@@ -42,6 +43,9 @@ export const enrollmentRouter = createTRPCRouter({
     const enrollments = await ctx.db.enrollment.findMany({
       where: {
         userId: ctx.auth?.userId ?? null,
+        class: {
+          deletedAt: null,
+        },
       },
     });
 
@@ -67,6 +71,7 @@ export const enrollmentRouter = createTRPCRouter({
       const classObj = await db.class.findFirst({
         where: {
           classCode: input.classCode,
+          deletedAt: null,
         },
       });
 
@@ -114,6 +119,7 @@ export const enrollmentRouter = createTRPCRouter({
       const classObj = await db.class.findFirst({
         where: {
           classCode: input.classCode,
+          deletedAt: null,
         },
       });
 
