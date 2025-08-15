@@ -7,7 +7,7 @@ import { api } from "~/utils/api";
 import { type User } from "@clerk/clerk-sdk-node";
 import { type RouterOutputs } from "~/utils/api";
 import { formatBalance, formatCurrency } from "~/utils/helpers";
-import { TrashIcon, ChevronDownIcon, BarsArrowDownIcon } from "@heroicons/react/20/solid";
+import { TrashIcon, BarsArrowDownIcon } from "@heroicons/react/20/solid";
 import {
   Table,
   TableBody,
@@ -86,14 +86,14 @@ const TransactionFeed = (prop: { classCode: string }) => {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <Table className="w-full table-fixed">
+            <Table className="w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px]">Date</TableHead>
-                  <TableHead className="w-[120px]">From</TableHead>
-                  <TableHead className="w-[120px]">To</TableHead>
-                  <TableHead className="w-[100px]">Amount</TableHead>
-                  <TableHead className="w-[200px]">Note</TableHead>
+                  <TableHead className="w-1/4 min-w-[150px]">Date</TableHead>
+                  <TableHead className="w-1/6 min-w-[100px]">From</TableHead>
+                  <TableHead className="w-1/6 min-w-[100px]">To</TableHead>
+                  <TableHead className="w-1/12 min-w-[80px]">Amount</TableHead>
+                  <TableHead className="w-1/4 min-w-[150px]">Note</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -253,7 +253,7 @@ export default function ClassPage() {
   if (loadingState === "loading") return <div>Loading...</div>;
 
   const tableColumns = ["On the Fly", "Transaction", "Note", "Name", "Email", "Balance", ""];
-  const tableColumnWidths = ["w-[280px]", "w-[280px]", "w-[200px]", "w-[120px]", "w-[180px]", "w-[100px]", "w-[60px]"];
+  const tableColumnWidths = ["w-1/4 min-w-[200px]", "w-1/4 min-w-[200px]", "w-1/6 min-w-[150px]", "w-1/8 min-w-[120px]", "w-1/6 min-w-[150px]", "w-1/12 min-w-[100px]", "w-12"];
 
   const handleTransaction = async (enrollment: Enrollment) => {
     // TODO: Replace with with a useRef
@@ -309,7 +309,7 @@ export default function ClassPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <PageLayout>
-        <div className="space-y-6 px-4 md:px-6 lg:px-8">
+        <div className="space-y-6 px-4 sm:px-6 lg:px-8">
           <div className="space-y-2">
             <div>{`Hi ${user.data?.firstName}!`}</div>
             <div>{classInfo.data?.className}</div>
@@ -324,20 +324,20 @@ export default function ClassPage() {
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <Table className="w-full table-fixed">
+              <Table className="w-full">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-1/2">Apply transaction to all</TableHead>
-                    <TableHead className="w-1/2">Apply note to all</TableHead>
+                    <TableHead className="w-1/2 min-w-[300px]">Apply transaction to all</TableHead>
+                    <TableHead className="w-1/2 min-w-[300px]">Apply note to all</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   <TableRow>
                     <TableCell>
-                      <div className="flex w-full gap-2">
-                        <div className="flex-grow">
+                      <div className="flex w-full gap-1 sm:gap-2">
+                        <div className="flex-grow min-w-0">
                           <select
-                            className="flex w-full h-full rounded border border-border bg-background px-2 py-2 text-foreground truncate"
+                            className="flex w-full h-full rounded border border-border bg-background px-2 py-2 text-foreground truncate min-w-0"
                             name="amount"
                             id={`amount-all`}
                             defaultValue={undefined}
@@ -360,18 +360,20 @@ export default function ClassPage() {
                               select.value = (document.getElementById(`amount-all`) as HTMLSelectElement).value;
                             });
                           }}
+                          className="shrink-0"
                         >
                           Apply
                         </Button>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex w-full gap-2">
-                        <div className="flex-grow">
+                      <div className="flex w-full gap-1 sm:gap-2">
+                        <div className="flex-grow min-w-0">
                           <Input
                             placeholder="Note"
                             type="text"
                             id={`note-all`}
+                            className="w-full min-w-0"
                           />
                         </div>
                         <Button
@@ -380,6 +382,7 @@ export default function ClassPage() {
                               input.value = (document.getElementById(`note-all`) as HTMLInputElement).value;
                             });
                           }}
+                          className="shrink-0"
                         >
                           Apply
                         </Button>
@@ -402,7 +405,7 @@ export default function ClassPage() {
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <Table className="w-full table-fixed">
+                <Table className="w-full">
                   <TableHeader>
                     <TableRow>
                 {tableColumns.map((column, index) => {
@@ -479,8 +482,8 @@ export default function ClassPage() {
               {sortedEnrollments?.map((enrollment: Enrollment) => (
                     <TableRow key={enrollment.id}>
                       <TableCell>
-                        <div className="flex w-full gap-2 items-center">
-                          <span className="text-muted-foreground">$</span>
+                        <div className="flex w-full gap-1 sm:gap-2 items-center">
+                          <span className="text-muted-foreground text-sm">$</span>
                           <Input
                             ref={(el) => {
                               if (el) {
@@ -490,26 +493,27 @@ export default function ClassPage() {
                             placeholder="Amount"
                             type="number"
                             id={`amount-${enrollment.id}-on-the-fly`}
-                            className="flex-grow"
+                            className="flex-grow min-w-0"
                           />
                           <Button
                             size="sm"
                             disabled={createIsLoading}
                             onClick={() => void handleOnTheFlyTransaction(enrollment)}
+                            className="shrink-0"
                           >
                             Transfer
                           </Button>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex w-full gap-2 items-center">
+                        <div className="flex w-full gap-1 sm:gap-2 items-center">
                           <select
                             ref={(el) => {
                               if (el) {
                                 transactionSelectRefs.current.set(enrollment.id, el)
                               }
                             }}
-                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 truncate"
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 truncate min-w-0"
                             name="amount"
                             id={`amount-${enrollment.id}`}
                             defaultValue={undefined}
@@ -528,6 +532,7 @@ export default function ClassPage() {
                             size="sm"
                             disabled={createIsLoading}
                             onClick={() => void handleTransaction(enrollment)}
+                            className="shrink-0"
                           >
                             Transfer
                           </Button>
@@ -543,6 +548,7 @@ export default function ClassPage() {
                           placeholder="Note (optional)"
                           type="text"
                           id={`note-${enrollment.id}`}
+                          className="w-full min-w-0"
                         />
                       </TableCell>
                       <TableCell className="truncate" title={`${enrollment.firstName} ${enrollment.lastName}`}>
