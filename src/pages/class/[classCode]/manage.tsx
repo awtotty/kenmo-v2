@@ -79,34 +79,35 @@ const TransactionFeed = (prop: { classCode: string }) => {
 
   return (
     <>
+      <div className="w-full max-w-6xl mx-auto">
       <Card>
         <CardHeader>
           <CardTitle>Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="w-full table-fixed">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[200px]">Date</TableHead>
-                  <TableHead className="min-w-[100px]">From</TableHead>
-                  <TableHead className="min-w-[100px]">To</TableHead>
-                  <TableHead className="min-w-[50px]">Amount</TableHead>
-                  <TableHead className="min-w-[100px]">Note</TableHead>
+                  <TableHead className="w-[200px]">Date</TableHead>
+                  <TableHead className="w-[120px]">From</TableHead>
+                  <TableHead className="w-[120px]">To</TableHead>
+                  <TableHead className="w-[100px]">Amount</TableHead>
+                  <TableHead className="w-[200px]">Note</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {transactionsData?.map((transaction) => (
                   <TableRow key={transaction.id}>
-                    <TableCell>{transaction.createdAt.toLocaleString()}</TableCell>
-                    <TableCell>
+                    <TableCell className="truncate">{transaction.createdAt.toLocaleString()}</TableCell>
+                    <TableCell className="truncate">
                       {`${transaction.fromUser?.firstName ?? ""} ${transaction.fromUser?.lastName ?? ""}`}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="truncate">
                       {`${transaction.toUser?.firstName ?? ""} ${transaction.toUser?.lastName ?? ""}`}
                     </TableCell>
-                    <TableCell>{formatBalance(transaction.amount)}</TableCell>
-                    <TableCell>{transaction.note}</TableCell>
+                    <TableCell className="truncate">{formatBalance(transaction.amount)}</TableCell>
+                    <TableCell className="truncate" title={transaction.note}>{transaction.note}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -135,6 +136,7 @@ const TransactionFeed = (prop: { classCode: string }) => {
           </div>
         </CardContent>
       </Card>
+      </div>
     </>
   );
 };
@@ -251,7 +253,7 @@ export default function ClassPage() {
   if (loadingState === "loading") return <div>Loading...</div>;
 
   const tableColumns = ["On the Fly", "Transaction", "Note", "Name", "Email", "Balance", ""];
-  const tableColumnWidths = ["300px", "300px", "300px", "100px", "50px", "100px", "20px"];
+  const tableColumnWidths = ["w-[280px]", "w-[280px]", "w-[200px]", "w-[120px]", "w-[180px]", "w-[100px]", "w-[60px]"];
 
   const handleTransaction = async (enrollment: Enrollment) => {
     // TODO: Replace with with a useRef
@@ -307,7 +309,7 @@ export default function ClassPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <PageLayout>
-        <div className="space-y-6">
+        <div className="space-y-6 px-4 md:px-6 lg:px-8">
           <div className="space-y-2">
             <div>{`Hi ${user.data?.firstName}!`}</div>
             <div>{classInfo.data?.className}</div>
@@ -315,13 +317,14 @@ export default function ClassPage() {
           </div>
 
           {/* Here begins the bulk actions table */}
+        <div className="w-full max-w-6xl mx-auto">
         <Card>
           <CardHeader>
             <CardTitle>Bulk Actions</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="w-full table-fixed">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-1/2">Apply transaction to all</TableHead>
@@ -334,7 +337,7 @@ export default function ClassPage() {
                       <div className="flex w-full gap-2">
                         <div className="flex-grow">
                           <select
-                            className="flex w-full h-full rounded border border-border bg-background px-2 py-2 text-foreground"
+                            className="flex w-full h-full rounded border border-border bg-background px-2 py-2 text-foreground truncate"
                             name="amount"
                             id={`amount-all`}
                             defaultValue={undefined}
@@ -388,22 +391,24 @@ export default function ClassPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
           {/* Here ends the bulk actions table */}
 
           {/* Here begins the student management table */}
+          <div className="w-full max-w-6xl mx-auto">
           <Card>
             <CardHeader>
               <CardTitle>Students</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <Table>
+                <Table className="w-full table-fixed">
                   <TableHeader>
                     <TableRow>
                 {tableColumns.map((column, index) => {
                   if (column == "On the Fly") {
                     return (
-                      <TableHead key={index} className={`min-w-[${tableColumnWidths[index]}]`}>
+                      <TableHead key={index} className={tableColumnWidths[index]}>
                         <div className="flex w-full justify-between items-center">
                           <span>{column}</span>
                           <Button
@@ -423,7 +428,7 @@ export default function ClassPage() {
                   }
                   else if (column == "Transaction") {
                     return (
-                      <TableHead key={index} className={`min-w-[${tableColumnWidths[index]}]`}>
+                      <TableHead key={index} className={tableColumnWidths[index]}>
                         <div className="flex w-full justify-between items-center">
                           <span>{column}</span>
                           <Button
@@ -442,7 +447,7 @@ export default function ClassPage() {
                   }
                   else if (column == "Name") {
                     return (
-                      <TableHead key={index} className={`min-w-[${tableColumnWidths[index]}]`}>
+                      <TableHead key={index} className={tableColumnWidths[index]}>
                         <div className="flex w-full justify-between items-center">
                           <span>{column}</span>
                           <Button
@@ -461,7 +466,7 @@ export default function ClassPage() {
                   }
                   else {
                     return (
-                      <TableHead key={index} className={`min-w-[${tableColumnWidths[index]}]`}>
+                      <TableHead key={index} className={tableColumnWidths[index]}>
                         {column}
                       </TableHead>
                     );
@@ -504,7 +509,7 @@ export default function ClassPage() {
                                 transactionSelectRefs.current.set(enrollment.id, el)
                               }
                             }}
-                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 truncate"
                             name="amount"
                             id={`amount-${enrollment.id}`}
                             defaultValue={undefined}
@@ -540,11 +545,11 @@ export default function ClassPage() {
                           id={`note-${enrollment.id}`}
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="truncate" title={`${enrollment.firstName} ${enrollment.lastName}`}>
                         {enrollment.firstName} {enrollment.lastName}
                       </TableCell>
-                      <TableCell>{enrollment.email}</TableCell>
-                      <TableCell>
+                      <TableCell className="truncate" title={enrollment.email}>{enrollment.email}</TableCell>
+                      <TableCell className="truncate">
                         {formatBalance(enrollment.checkingAccountBalance)}
                       </TableCell>
                       <TableCell>
@@ -567,6 +572,7 @@ export default function ClassPage() {
               </div>
             </CardContent>
           </Card>
+          </div>
         {/* Here ends the student management table */}
 
         <TransactionFeed classCode={classCode} />

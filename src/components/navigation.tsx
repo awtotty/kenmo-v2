@@ -10,7 +10,7 @@ const navButtonStyle = "hover:text-slate-500";
 export const Nav = () => {
   return (
     <>
-      <div className="flex w-full items-center border border-blue-900 rounded p-4 md:max-w-2xl">
+      <div className="flex w-full items-center border border-blue-900 rounded p-4 md:max-w-6xl mx-auto">
         <ul className="flex">
           <li className="mr-6">
             <Link className="" href="/">

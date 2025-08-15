@@ -26,7 +26,7 @@ const Enrollments = () => {
 
   return (
     <>
-      <div className="md: flex w-full max-w-2xl flex-col items-center justify-center gap-4">
+      <div className="md: flex w-full max-w-6xl mx-auto flex-col items-center justify-center gap-4">
         {enrollments?.map((enrollment: Enrollment) => (
           <ClassCard
             enrollment={enrollment}

@@ -4,7 +4,7 @@ import { type RouterOutputs } from "~/utils/api";
 import { ROLE } from "~/utils/constants";
 import { formatBalance } from "~/utils/helpers";
 
-const cardStyle = "block w-full md:max-w-2xl p-6 border rounded shadow border-blue-900 border-blue-900 hover:bg-blue-950";
+const cardStyle = "block w-full md:max-w-6xl mx-auto p-6 border rounded shadow border-blue-900 border-blue-900 hover:bg-blue-950";
 
 type EnrollmentWithClassInfo =
   RouterOutputs["enrollment"]["getAllCurrentUser"][0];

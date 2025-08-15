@@ -150,10 +150,11 @@ export default function ClassPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <PageLayout>
+        <div className="px-4 md:px-6 lg:px-8 space-y-6">
         <div>{`Hi ${user?.firstName}!`}</div>
         <div>{classInfo.data?.className}</div>
 
-        <div className="flex flex-col w-full items-center border border-blue-900 rounded p-4 md:max-w-2xl">
+        <div className="flex flex-col w-full items-center border border-blue-900 rounded p-4 md:max-w-6xl mx-auto">
           <div className="flex flex-row justify-between gap-4 py-2">
             {`From: ${userAccounts ? userAccounts[0]?.name ?? "No account found" : "Loading..."} `}
             {userAccounts ? formatBalance(userAccounts[0]?.balance) : "Loading..."}
@@ -228,26 +229,27 @@ export default function ClassPage() {
           </div>
         </div>
 
+        <div className="w-full max-w-6xl mx-auto">
         <Card>
           <CardHeader>
             <CardTitle>Recent Transactions</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="w-full table-fixed">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="min-w-[200px]">Date</TableHead>
-                    <TableHead className="min-w-[50px]">Amount</TableHead>
-                    <TableHead className="min-w-[100px]">Note</TableHead>
+                    <TableHead className="w-[200px]">Date</TableHead>
+                    <TableHead className="w-[100px]">Amount</TableHead>
+                    <TableHead className="w-[300px]">Note</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {transactionsData?.transactions.map((transaction) => (
                     <TableRow key={transaction.id}>
-                      <TableCell>{transaction.createdAt.toLocaleString()}</TableCell>
-                      <TableCell>{formatBalance(transaction.amount)}</TableCell>
-                      <TableCell>{transaction.note}</TableCell>
+                      <TableCell className="truncate">{transaction.createdAt.toLocaleString()}</TableCell>
+                      <TableCell className="truncate">{formatBalance(transaction.amount)}</TableCell>
+                      <TableCell className="truncate" title={transaction.note}>{transaction.note}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -276,6 +278,8 @@ export default function ClassPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
+        </div>
       </PageLayout >
     </>
   );

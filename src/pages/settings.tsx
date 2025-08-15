@@ -35,8 +35,8 @@ const CustomTransactionList = () => {
   if (isLoading) {
     return (
       <>
-        <div className="flex flex-col w-full items-center md:max-w-2xl">
-          <Card className="w-full">
+        <div className="w-full max-w-6xl mx-auto">
+          <Card>
             <CardHeader>
               <CardTitle>Your Custom Transactions</CardTitle>
             </CardHeader>
@@ -51,8 +51,8 @@ const CustomTransactionList = () => {
   if (!data) {
     return (
       <>
-        <div className="flex flex-col w-full items-center md:max-w-2xl">
-          <Card className="w-full">
+        <div className="w-full max-w-6xl mx-auto">
+          <Card>
             <CardHeader>
               <CardTitle>Your Custom Transactions</CardTitle>
             </CardHeader>
@@ -66,28 +66,28 @@ const CustomTransactionList = () => {
   }
   return (
     <>
-      <div className="flex flex-col w-full items-center md:max-w-2xl">
-        <Card className="w-full">
+      <div className="w-full max-w-6xl mx-auto">
+        <Card>
           <CardHeader>
             <CardTitle>Your Custom Transactions</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
+            <Table className="w-full table-fixed">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-1/4">Amount</TableHead>
-                  <TableHead className="w-3/4">Note</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
+                  <TableHead className="w-[120px]">Amount</TableHead>
+                  <TableHead className="w-[400px]">Note</TableHead>
+                  <TableHead className="w-[60px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data?.map((transaction: CustomTransaction) => {
                   return (
                     <TableRow key={transaction.id}>
-                      <TableCell>
+                      <TableCell className="truncate">
                         {formatBalance(transaction.amount)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="truncate" title={transaction.note}>
                         {transaction.note}
                       </TableCell>
                       <TableCell>
@@ -112,7 +112,7 @@ const CustomTransactionList = () => {
             </Table>
           </CardContent>
         </Card>
-      </div >
+      </div>
     </>
   );
 }
@@ -132,8 +132,8 @@ const CustomTransactionCreator = () => {
   });
   return (
     <>
-      <div className="flex flex-col w-full items-center md:max-w-2xl">
-        <Card className="w-full">
+      <div className="w-full max-w-6xl mx-auto">
+        <Card>
           <CardHeader>
             <CardTitle>Create Custom Transaction</CardTitle>
           </CardHeader>
@@ -201,7 +201,7 @@ export default function Settings() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <PageLayout>
-        <div className="space-y-6">
+        <div className="space-y-6 px-4 md:px-6 lg:px-8">
           <CustomTransactionCreator />
           <CustomTransactionList />
         </div>
