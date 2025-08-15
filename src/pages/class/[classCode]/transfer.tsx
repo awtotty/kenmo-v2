@@ -6,6 +6,16 @@ import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
 import { type RouterOutputs, api } from "~/utils/api";
 import { formatBalance } from "~/utils/helpers";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Account = RouterOutputs["account"]["getAllByClassCode"][0];
 type Enrollment = RouterOutputs["enrollment"]["getCurrentUserByClassCode"];
@@ -218,55 +228,54 @@ export default function ClassPage() {
           </div>
         </div>
 
-        <div>
-          <div className="">
-            Recent Transactions
-          </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Transactions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[200px]">Date</TableHead>
+                    <TableHead className="min-w-[50px]">Amount</TableHead>
+                    <TableHead className="min-w-[100px]">Note</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {transactionsData?.transactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell>{transaction.createdAt.toLocaleString()}</TableCell>
+                      <TableCell>{formatBalance(transaction.amount)}</TableCell>
+                      <TableCell>{transaction.note}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
 
-          <div className="overflow-x-auto">
-            <table className="md:min-w-full table-auto border-collapse border border-gray-300">
-              <thead>
-                <tr>
-                  <th className="min-w-[200px] border border-gray-300 bg-gray-700 p-2">Date</th>
-                  <th className="min-w-[50px] border border-gray-300 bg-gray-700 p-2">Amount</th>
-                  <th className="min-w-[100px] border border-gray-300 bg-gray-700 p-2">Note</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactionsData?.transactions.map((transaction) => (
-                  <tr
-                    key={transaction.id}
-                  >
-                    <td>{transaction.createdAt.toLocaleString()}</td>
-                    <td>{formatBalance(transaction.amount)}</td>
-                    <td>{transaction.note}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Controls */}
-          <div className="flex justify-between items-center mt-4">
-            <button
-              className="bg-slate-400 hover:bg-slate-500 px-4 py-2 rounded"
-              disabled={page === 1}
-              onClick={handlePrevPage}
-            >
-              Previous
-            </button>
-            <p>
-              Page {page} of {totalPages}
-            </p>
-            <button
-              className="bg-slate-400 hover:bg-slate-500 px-4 py-2 rounded"
-              disabled={page === totalPages}
-              onClick={handleNextPage}
-            >
-              Next
-            </button>
-          </div>
-        </div>
+            {/* Pagination Controls */}
+            <div className="flex justify-between items-center mt-4">
+              <Button
+                variant="outline"
+                disabled={page === 1}
+                onClick={handlePrevPage}
+              >
+                Previous
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                Page {page} of {totalPages}
+              </p>
+              <Button
+                variant="outline"
+                disabled={page === totalPages}
+                onClick={handleNextPage}
+              >
+                Next
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </PageLayout >
     </>
   );
