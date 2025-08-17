@@ -310,10 +310,18 @@ export default function ClassPage() {
       </Head>
       <PageLayout>
         <div className="space-y-6 px-4 sm:px-6 lg:px-8">
-          <div className="space-y-2">
-            <div>{`Hi ${user.data?.firstName}!`}</div>
-            <div>{classInfo.data?.className}</div>
-            <div>Class code: {classCode}</div>
+          <div className="w-full max-w-6xl mx-auto">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h1 className="text-xl font-semibold">{`Hi ${user.data?.firstName}!`}</h1>
+                    <p className="text-muted-foreground">{classInfo.data?.className}</p>
+                    <p className="text-sm text-muted-foreground">Class code: {classCode}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Here begins the bulk actions table */}
