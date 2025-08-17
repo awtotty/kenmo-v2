@@ -151,82 +151,75 @@ export default function ClassPage() {
       </Head>
       <PageLayout>
         <div className="px-4 md:px-6 lg:px-8 space-y-6">
-        <div>{`Hi ${user?.firstName}!`}</div>
-        <div>{classInfo.data?.className}</div>
+        <div className="w-full max-w-6xl mx-auto">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-xl font-semibold">{`Hi ${user?.firstName}!`}</h1>
+                  <p className="text-muted-foreground">{classInfo.data?.className}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-        <div className="flex flex-col w-full items-center border border-blue-900 rounded p-4 md:max-w-6xl mx-auto">
-          <div className="flex flex-row justify-between gap-4 py-2">
-            {`From: ${userAccounts ? userAccounts[0]?.name ?? "No account found" : "Loading..."} `}
-            {userAccounts ? formatBalance(userAccounts[0]?.balance) : "Loading..."}
-            {/*
-            <select
-              className="rounded border-2 border-gray-200 text-gray-700 w-48"
-              value={fromAccountId}
-              defaultValue={fromAccountId}
-              onChange={(e) => setFromAccountId(e.target.value)}
-              disabled={isLoading}
-            >
-              <option value="">Select an account</option>
-              {fromItems.map((item) => (
-                <option
-                  key={item.id}
-                  value={item.id}
-                >{`${enrollment?.firstName}${enrollment?.firstName ? "'s" : ""} ${item.name} ($${item.balance})`}</option>
-              ))}
-            </select>
-            */}
-          </div>
-          <div className="flex flex-row justify-between gap-4 py-2">
-            {`To: ${classBankAccounts ? "Teacher" : "Loading..."} `}
-            {/*
-            <select
-              className="rounded border-2 border-gray-200 text-gray-700 w-48"
-              value={toAccountId}
-              onChange={(e) => setToAccountId(e.target.value)}
-              disabled={isLoading}
-            >
-              <option value="">Select an account</option>
-              {toItems.map((item) => (
-                <option
-                  key={item.id}
-                  value={item.id}
-                >{`${enrollment?.className} Bank ${item.id}`}</option>
-              ))}
-            </select>
-            */}
-          </div>
-          <div className="flex flex-row justify-between gap-4 py-2 w-48">
-            Amount
-            <span className="-mr-5">$</span>
-            <input
-              className="flex float-right w-1/2 border border-gray-300 rounded-md p-2 text-slate-700"
-              type="text"
-              id="amount"
-              value={amountInput ?? undefined}
-              placeholder="0.00"
-              onChange={(e) => setAmountInput(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-row justify-between gap-4 py-2 w-48">
-            Note
-            <input
-              className="flex float-right w-full border border-gray-300 rounded-md p-2 text-slate-700"
-              type="text"
-              value={noteInput}
-              placeholder="What is this for?"
-              onChange={(e) => setNoteInput(e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
-          <div className="flex flex-row justify-between py-2 border-gray-200">
-            <button
-              className="rounded bg-blue-500 px-4 py-2 hover:bg-blue-600"
-              disabled={isLoading}
-              onClick={() => void handleTransfer()}
-            >
-              Transfer
-            </button>
-          </div>
+        <div className="w-full max-w-6xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle>Transfer Funds</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex flex-row justify-between items-center">
+                <span className="font-medium">From:</span>
+                <div className="text-right">
+                  <div>{userAccounts ? userAccounts[0]?.name ?? "No account found" : "Loading..."}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {userAccounts ? formatBalance(userAccounts[0]?.balance) : "Loading..."}
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-row justify-between items-center">
+                <span className="font-medium">To:</span>
+                <span>{classBankAccounts ? "Teacher" : "Loading..."}</span>
+              </div>
+              <div className="flex flex-row justify-between items-center gap-4">
+                <span className="font-medium">Amount:</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">$</span>
+                  <input
+                    className="flex h-9 w-24 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    type="text"
+                    id="amount"
+                    value={amountInput ?? ""}
+                    placeholder="0.00"
+                    onChange={(e) => setAmountInput(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-row justify-between items-center gap-4">
+                <span className="font-medium">Note:</span>
+                <input
+                  className="flex h-9 flex-1 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  type="text"
+                  value={noteInput}
+                  placeholder="What is this for?"
+                  onChange={(e) => setNoteInput(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="flex justify-center pt-2">
+                <Button
+                  disabled={isLoading}
+                  onClick={() => void handleTransfer()}
+                >
+                  Transfer
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         </div>
 
         <div className="w-full max-w-6xl mx-auto">

@@ -4,47 +4,39 @@
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import Image from "next/image";
+import { Card, CardContent } from "@/components/ui/card";
 
-const navButtonStyle = "hover:text-slate-500";
+const navButtonStyle = "hover:text-muted-foreground transition-colors";
 
 export const Nav = () => {
   return (
-    <>
-      <div className="flex w-full items-center border border-blue-900 rounded p-4 md:max-w-6xl mx-auto">
-        <ul className="flex">
-          <li className="mr-6">
-            <Link className="" href="/">
-              <Image src="/logo/svg/logo-no-background.svg" alt="Kenmo" width={80} height={80} />
-            </Link>
-          </li>
-          <li className="mr-6">
-            <Link className={navButtonStyle} href="/">
-              Home
-            </Link>
-          </li>
-          {/*
-          <li className="mr-6">
-            <Link className={navButtonStyle} href="#">
-              Activity
-            </Link>
-          </li>
-          */}
-          <li className="mr-6">
-            <Link className={navButtonStyle} href="/join">
-              Join
-            </Link>
-          </li>
-          <div className="mr-6">
-            <Link className={navButtonStyle} href="/settings">
-              {`Settings `}
-            </Link>
+    <div className="w-full max-w-6xl mx-auto">
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center">
+            <div className="flex items-center space-x-6">
+              <Link href="/">
+                <Image src="/logo/svg/logo-no-background.svg" alt="Kenmo" width={80} height={80} />
+              </Link>
+              <nav className="flex space-x-6">
+                <Link className={navButtonStyle} href="/">
+                  Home
+                </Link>
+                <Link className={navButtonStyle} href="/join">
+                  Join
+                </Link>
+                <Link className={navButtonStyle} href="/settings">
+                  Settings
+                </Link>
+              </nav>
+            </div>
+            <div className="flex-grow"></div>
+            <div className="flex justify-center">
+              <UserButton afterSignOutUrl="/" />
+            </div>
           </div>
-        </ul>
-        <div className="flex-grow"></div>
-        <div className="float-right flex justify-center">
-          <UserButton afterSignOutUrl="/" />
-        </div>
-      </div>
-    </>
+        </CardContent>
+      </Card>
+    </div>
   );
 };

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ClassCard } from "~/components/classCard";
 import { PageLayout } from "~/components/layout";
 import { type RouterOutputs, api } from "~/utils/api";
+import { Button } from "@/components/ui/button";
 
 type Enrollment = RouterOutputs["enrollment"]["getAllCurrentUser"][0];
 
@@ -15,11 +16,11 @@ const Enrollments = () => {
 
   if (!enrollments || enrollments.length == 0)
     return (
-        <div>
+        <div className="flex justify-center">
           <Link href="/join">
-            <button className="bg-blue-500 hover:bg-blue-600 py-2 px-4 rounded">
+            <Button>
               Join a class
-            </button>
+            </Button>
           </Link>
         </div>
     );
