@@ -58,7 +58,7 @@
     @apply dark;
   }
   body {
-    @apply bg-slate-900 text-slate-100;
+    @apply bg-background text-foreground;
     overscroll-behavior: none;
   }
 }
