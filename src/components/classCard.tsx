@@ -3,8 +3,8 @@ import Link from "next/link";
 import { type RouterOutputs } from "~/utils/api";
 import { ROLE } from "~/utils/constants";
 import { formatBalance } from "~/utils/helpers";
-
-const cardStyle = "block w-full md:max-w-2xl p-6 border rounded shadow border-blue-900 border-blue-900 hover:bg-blue-950";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 type EnrollmentWithClassInfo =
   RouterOutputs["enrollment"]["getAllCurrentUser"][0];
@@ -19,41 +19,47 @@ export const ClassCard = ({
 
   if (enrollment.role === ROLE.ADMIN) {
     return (
-      <>
-        <Link href={`/class/${enrollment.classCode}/manage`} className={cardStyle}>
-
-          <div className="float-left flex-col">
-            <div className="text-left">{enrollment.className}</div>
-            <div className="text-left">{enrollment.role}</div>
-          </div>
-          <div className="flex-grow"></div>
-          <div className="float-right">
-            <div>Class Code: {enrollment.classCode}</div>
-          </div>
-        </Link>
-      </>
+      <div className="w-full max-w-6xl mx-auto">
+        <Card className="hover:bg-muted/50 transition-colors">
+          <CardContent className="p-4">
+            <Link href={`/class/${enrollment.classCode}/manage`} className="block">
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col">
+                  <div className="font-semibold text-lg">{enrollment.className}</div>
+                  <div className="text-sm text-muted-foreground">{enrollment.role}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-muted-foreground">Class Code: {enrollment.classCode}</div>
+                </div>
+              </div>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
     );
   } else if (enrollment.role === ROLE.STUDENT) {
     return (
-      <>
-        <Link href={`/class/${enrollment.classCode}/transfer`} className={cardStyle}>
-
-          <div className="float-left flex-col">
-            <div className="text-left">{enrollment.className}</div>
-          </div>
-          <div className="flex-grow"></div>
-          <div className="float-right justify-center text-right">
-            <div>
-              Balance:{" "}
-              {formatBalance(enrollment.checkingAccountBalance)}
-            </div>
-            <button className="bg-blue-500 hover:bg-blue-700 py-2 px-4 rounded">
-              Send
-            </button>
-          </div>
-
-        </Link>
-      </>
+      <div className="w-full max-w-6xl mx-auto">
+        <Card className="hover:bg-muted/50 transition-colors">
+          <CardContent className="p-4">
+            <Link href={`/class/${enrollment.classCode}/transfer`} className="block">
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col">
+                  <div className="font-semibold text-lg">{enrollment.className}</div>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <div className="text-sm text-muted-foreground">
+                    Balance: {formatBalance(enrollment.checkingAccountBalance)}
+                  </div>
+                  <Button size="sm">
+                    Send
+                  </Button>
+                </div>
+              </div>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
     );
   } else {
     return <div>Invalid role</div>;

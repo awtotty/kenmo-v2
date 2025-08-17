@@ -7,7 +7,18 @@ import { api } from "~/utils/api";
 import { type User } from "@clerk/clerk-sdk-node";
 import { type RouterOutputs } from "~/utils/api";
 import { formatBalance, formatCurrency } from "~/utils/helpers";
-import { TrashIcon, ChevronDownIcon, BarsArrowDownIcon } from "@heroicons/react/20/solid";
+import { TrashIcon, BarsArrowDownIcon } from "@heroicons/react/20/solid";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Enrollment = RouterOutputs["enrollment"]["getAllByClassCode"][0];
 type Transaction = RouterOutputs["transaction"]["getAllByClassCode"]["transactions"][0];
@@ -68,60 +79,63 @@ const TransactionFeed = (prop: { classCode: string }) => {
 
   return (
     <>
-      <div className="">
-        Recent Transactions
-      </div>
+      <div className="w-full max-w-6xl mx-auto">
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table className="w-full">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-1/4 min-w-[150px]">Date</TableHead>
+                  <TableHead className="w-1/6 min-w-[100px]">From</TableHead>
+                  <TableHead className="w-1/6 min-w-[100px]">To</TableHead>
+                  <TableHead className="w-1/12 min-w-[80px]">Amount</TableHead>
+                  <TableHead className="w-1/4 min-w-[150px]">Note</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transactionsData?.map((transaction) => (
+                  <TableRow key={transaction.id}>
+                    <TableCell className="truncate">{transaction.createdAt.toLocaleString()}</TableCell>
+                    <TableCell className="truncate">
+                      {`${transaction.fromUser?.firstName ?? ""} ${transaction.fromUser?.lastName ?? ""}`}
+                    </TableCell>
+                    <TableCell className="truncate">
+                      {`${transaction.toUser?.firstName ?? ""} ${transaction.toUser?.lastName ?? ""}`}
+                    </TableCell>
+                    <TableCell className="truncate">{formatBalance(transaction.amount)}</TableCell>
+                    <TableCell className="truncate" title={transaction.note}>{transaction.note}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
-      <div className="overflow-x-auto">
-        <table className="md:min-w-full table-auto border-collapse border border-gray-300">
-          <thead>
-            <tr>
-              <th className="min-w-[200px] border border-gray-300 bg-gray-700 p-2">Date</th>
-              <th className="min-w-[100px] border border-gray-300 bg-gray-700 p-2">From</th>
-              <th className="min-w-[100px] border border-gray-300 bg-gray-700 p-2">To</th>
-              <th className="min-w-[50px] border border-gray-300 bg-gray-700 p-2">Amount</th>
-              <th className="min-w-[100px] border border-gray-300 bg-gray-700 p-2">Note</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactionsData?.map((transaction) => (
-              <tr
-                key={transaction.id}
-              >
-                <td>{transaction.createdAt.toLocaleString()}</td>
-                <td>
-                  {`${transaction.fromUser?.firstName ?? ""} ${transaction.fromUser?.lastName ?? ""}`}
-                </td>
-                <td>
-                  {`${transaction.toUser?.firstName ?? ""} ${transaction.toUser?.lastName ?? ""}`}
-                </td>
-                <td>{formatBalance(transaction.amount)}</td>
-                <td>{transaction.note}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination Controls */}
-      <div className="flex justify-between items-center mt-4">
-        <button
-          className="bg-slate-400 hover:bg-slate-500 px-4 py-2 rounded"
-          disabled={page === 1}
-          onClick={handlePrevPage}
-        >
-          Previous
-        </button>
-        <p>
-          Page {page} of {totalPages}
-        </p>
-        <button
-          className="bg-slate-400 hover:bg-slate-500 px-4 py-2 rounded"
-          disabled={page === totalPages}
-          onClick={handleNextPage}
-        >
-          Next
-        </button>
+          {/* Pagination Controls */}
+          <div className="flex justify-between items-center mt-4">
+            <Button
+              variant="outline"
+              disabled={page === 1}
+              onClick={handlePrevPage}
+            >
+              Previous
+            </Button>
+            <p className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </p>
+            <Button
+              variant="outline"
+              disabled={page === totalPages}
+              onClick={handleNextPage}
+            >
+              Next
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
       </div>
     </>
   );
@@ -239,7 +253,7 @@ export default function ClassPage() {
   if (loadingState === "loading") return <div>Loading...</div>;
 
   const tableColumns = ["On the Fly", "Transaction", "Note", "Name", "Email", "Balance", ""];
-  const tableColumnWidths = ["300px", "300px", "300px", "100px", "50px", "100px", "20px"];
+  const tableColumnWidths = ["w-1/4 min-w-[200px]", "w-1/4 min-w-[200px]", "w-1/6 min-w-[150px]", "w-1/8 min-w-[120px]", "w-1/6 min-w-[150px]", "w-1/12 min-w-[100px]", "w-12"];
 
   const handleTransaction = async (enrollment: Enrollment) => {
     // TODO: Replace with with a useRef
@@ -295,292 +309,300 @@ export default function ClassPage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <PageLayout>
-        <div>{`Hi ${user.data?.firstName}!`}</div>
-        <div>{classInfo.data?.className}</div>
-        <div>Class code: {classCode}</div>
-
-        {/* Here begins the bulk actions table */}
-        <div className="overflow-x-auto">
-          <table className="md:min-w-full table-auto border-collapse border border-gray-300">
-            <thead>
-              <tr>
-                <th className="w-1/2 border border-gray-300 bg-gray-700 p-2">Apply transaction to all</th>
-                <th className="w-1/2 border border-gray-300 bg-gray-700 p-2">Apply note to all</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border border-gray-300 p-2">
-                  <div className="flex w-full flow-root">
-                    <div className="flex w-3/4 float-left">
-                      <select
-                        className="flex w-full h-full rounded border border-gray-400 bg-white px-2 py-2 text-gray-700"
-                        name="amount"
-                        id={`amount-all`}
-                        defaultValue={undefined}
-                      >
-                        <option value={undefined}>Select a transaction</option>
-                        {possibleTransactions.map((transaction) => (
-                          <option
-                            key={transaction.id}
-                            className="flex w-full"
-                            value={transaction.id}
-                          >
-                            {`${formatCurrency(transaction.amount)}  (${transaction.note})`}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex w-1/4 float-right">
-                      <button
-                        className="flex w-full justify-center rounded bg-blue-500 px-2 py-1 hover:bg-blue-600"
-                        onClick={() => {
-                          transactionSelectRefs.current.forEach((select) => {
-                            select.value = (document.getElementById(`amount-all`) as HTMLSelectElement).value;
-                          });
-                        }}
-                      >
-                        Apply
-                      </button>
-                    </div>
+        <div className="space-y-6 px-4 sm:px-6 lg:px-8">
+          <div className="w-full max-w-6xl mx-auto">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h1 className="text-xl font-semibold">{`Hi ${user.data?.firstName}!`}</h1>
+                    <p className="text-muted-foreground">{classInfo.data?.className}</p>
+                    <p className="text-sm text-muted-foreground">Class code: {classCode}</p>
                   </div>
-                </td>
-                <td className="border border-gray-300 p-2">
-                  <div className="flex w-full flow-root">
-                    <div className="flex w-3/4 float-left">
-                      <input
-                        placeholder="Note"
-                        className="flex w-full rounded border border-gray-400 bg-white px-2 py-1 text-gray-700"
-                        type="text"
-                        id={`note-all`}
-                      />
-                    </div>
-                    <div className="flex w-1/4 float-right">
-                      <button
-                        className="flex w-full justify-center rounded bg-blue-500 px-2 py-1 hover:bg-blue-600"
-                        onClick={() => {
-                          noteInputRefs.current.forEach((input) => {
-                            input.value = (document.getElementById(`note-all`) as HTMLInputElement).value;
-                          });
-                        }}
-                      >
-                        Apply
-                      </button>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          {/* Here ends the bulk actions table */}
-          <div className="flex gap-8 justify-center">
-            <ChevronDownIcon className="h-5 w-5" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Here begins the management table */}
-          <table className="md:min-w-full table-auto border-collapse border border-gray-300">
-            <thead>
-              <tr>
+          {/* Here begins the bulk actions table */}
+        <div className="w-full max-w-6xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle>Bulk Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table className="w-full">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-1/2 min-w-[300px]">Apply transaction to all</TableHead>
+                    <TableHead className="w-1/2 min-w-[300px]">Apply note to all</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>
+                      <div className="flex w-full gap-1 sm:gap-2">
+                        <div className="flex-grow min-w-0">
+                          <select
+                            className="flex w-full h-full rounded border border-border bg-background px-2 py-2 text-foreground truncate min-w-0"
+                            name="amount"
+                            id={`amount-all`}
+                            defaultValue={undefined}
+                          >
+                            <option value={undefined}>Select a transaction</option>
+                            {possibleTransactions.map((transaction) => (
+                              <option
+                                key={transaction.id}
+                                className="flex w-full"
+                                value={transaction.id}
+                              >
+                                {`${formatCurrency(transaction.amount)}  (${transaction.note})`}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <Button
+                          onClick={() => {
+                            transactionSelectRefs.current.forEach((select) => {
+                              select.value = (document.getElementById(`amount-all`) as HTMLSelectElement).value;
+                            });
+                          }}
+                          className="shrink-0"
+                        >
+                          Apply
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex w-full gap-1 sm:gap-2">
+                        <div className="flex-grow min-w-0">
+                          <Input
+                            placeholder="Note"
+                            type="text"
+                            id={`note-all`}
+                            className="w-full min-w-0"
+                          />
+                        </div>
+                        <Button
+                          onClick={() => {
+                            noteInputRefs.current.forEach((input) => {
+                              input.value = (document.getElementById(`note-all`) as HTMLInputElement).value;
+                            });
+                          }}
+                          className="shrink-0"
+                        >
+                          Apply
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+        </div>
+          {/* Here ends the bulk actions table */}
+
+          {/* Here begins the student management table */}
+          <div className="w-full max-w-6xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle>Students</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table className="w-full">
+                  <TableHeader>
+                    <TableRow>
                 {tableColumns.map((column, index) => {
                   if (column == "On the Fly") {
                     return (
-                      <th key={index} className={`min-w-[${tableColumnWidths[index]}] border border-gray-300 bg-gray-700 p-2`}>
-                        <div className="flex w-full flow-root">
-                          <div className="flex w-1/2 float-left">
-                            {column}
-                          </div>
-                          <div className="flex w-1/2 float-right justify-end">
-                            <button
-                              className="rounded bg-blue-500 px-2 py-1 hover:bg-blue-600"
-                              onClick={() => {
-                                sortedEnrollments?.forEach((enrollment) => {
-                                  if (onTheFlyAmountRefs.current.get(enrollment.id)?.value == "") return;
-                                  void handleOnTheFlyTransaction(enrollment);
-                                });
-                              }}
-                            >
-                              Transfer all
-                            </button>
-                          </div>
+                      <TableHead key={index} className={tableColumnWidths[index]}>
+                        <div className="flex w-full justify-between items-center">
+                          <span>{column}</span>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              sortedEnrollments?.forEach((enrollment) => {
+                                if (onTheFlyAmountRefs.current.get(enrollment.id)?.value == "") return;
+                                void handleOnTheFlyTransaction(enrollment);
+                              });
+                            }}
+                          >
+                            Transfer all
+                          </Button>
                         </div>
-                      </th>
+                      </TableHead>
                     );
                   }
                   else if (column == "Transaction") {
                     return (
-                      <th key={index} className={`min-w-[${tableColumnWidths[index]}] border border-gray-300 bg-gray-700 p-2`}>
-                        <div className="flex w-full flow-root">
-                          <div className="flex justify-center float-left">
-                            {column}
-                          </div>
-                          <div className="flex float-right">
-                            <button
-                              className="rounded bg-blue-500 px-2 py-1 hover:bg-blue-600"
-                              onClick={() => {
-                                sortedEnrollments?.forEach((enrollment) => {
-                                  void handleTransaction(enrollment);
-                                });
-                              }}
-                            >
-                              Transfer all
-                            </button>
-                          </div>
+                      <TableHead key={index} className={tableColumnWidths[index]}>
+                        <div className="flex w-full justify-between items-center">
+                          <span>{column}</span>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              sortedEnrollments?.forEach((enrollment) => {
+                                void handleTransaction(enrollment);
+                              });
+                            }}
+                          >
+                            Transfer all
+                          </Button>
                         </div>
-                      </th>
+                      </TableHead>
                     );
                   }
                   else if (column == "Name") {
                     return (
-                      <th key={index} className={`min-w-[${tableColumnWidths[index]}] border border-gray-300 bg-gray-700 p-2`}>
-                        <div className="flex w-full flow-root">
-                          <div className="flex float-left">
-                            {column}
-                          </div>
-                          <div className="flex float-right">
-                            <BarsArrowDownIcon
-                              className="h-5 w-5"
-                              onClick={() => {
-                                setSortBy(sortBy == "lastName" ? "firstName" : "lastName");
-                                toast.success(`Sorted by ${sortBy == "lastName" ? "first name" : "last name"}`);
-                              }}
-                            />
-                          </div>
+                      <TableHead key={index} className={tableColumnWidths[index]}>
+                        <div className="flex w-full justify-between items-center">
+                          <span>{column}</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSortBy(sortBy == "lastName" ? "firstName" : "lastName");
+                              toast.success(`Sorted by ${sortBy == "lastName" ? "first name" : "last name"}`);
+                            }}
+                          >
+                            <BarsArrowDownIcon className="h-4 w-4" />
+                          </Button>
                         </div>
-                      </th>
+                      </TableHead>
                     );
                   }
                   else {
                     return (
-                      <th key={index} className={`min-w-[${tableColumnWidths[index]}] border border-gray-300 bg-gray-700 p-2`}>{column}</th>
+                      <TableHead key={index} className={tableColumnWidths[index]}>
+                        {column}
+                      </TableHead>
                     );
                   }
                 })
                 }
-              </tr>
-            </thead>
-            <tbody>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
               {sortedEnrollments?.map((enrollment: Enrollment) => (
-                <tr
-                  className="w-full"
-                  key={enrollment.id}
-                >
-                  <td className="border border-gray-300 p-2">
-                    <div className="flex w-full flow-root">
-                      <span className="flex float-left">$</span>
-                      <div className="flex float-left">
-                        <input
+                    <TableRow key={enrollment.id}>
+                      <TableCell>
+                        <div className="flex w-full gap-1 sm:gap-2 items-center">
+                          <span className="text-muted-foreground text-sm">$</span>
+                          <Input
+                            ref={(el) => {
+                              if (el) {
+                                onTheFlyAmountRefs.current.set(enrollment.id, el)
+                              }
+                            }}
+                            placeholder="Amount"
+                            type="number"
+                            id={`amount-${enrollment.id}-on-the-fly`}
+                            className="flex-grow min-w-0"
+                          />
+                          <Button
+                            size="sm"
+                            disabled={createIsLoading}
+                            onClick={() => void handleOnTheFlyTransaction(enrollment)}
+                            className="shrink-0"
+                          >
+                            Transfer
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex w-full gap-1 sm:gap-2 items-center">
+                          <select
+                            ref={(el) => {
+                              if (el) {
+                                transactionSelectRefs.current.set(enrollment.id, el)
+                              }
+                            }}
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 truncate min-w-0"
+                            name="amount"
+                            id={`amount-${enrollment.id}`}
+                            defaultValue={undefined}
+                          >
+                            <option value={undefined}>Select a transaction</option>
+                            {possibleTransactions.map((transaction) => (
+                              <option
+                                key={transaction.id}
+                                value={transaction.id}
+                              >
+                                {`${formatCurrency(transaction.amount)}  (${transaction.note})`}
+                              </option>
+                            ))}
+                          </select>
+                          <Button
+                            size="sm"
+                            disabled={createIsLoading}
+                            onClick={() => void handleTransaction(enrollment)}
+                            className="shrink-0"
+                          >
+                            Transfer
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Input
                           ref={(el) => {
                             if (el) {
-                              onTheFlyAmountRefs.current.set(enrollment.id, el)
+                              noteInputRefs.current.set(enrollment.id, el)
                             }
                           }}
-                          placeholder="Amount"
-                          className="rounded border border-gray-400 bg-white px-2 py-1 text-gray-700"
-                          type="number"
-                          id={`amount-${enrollment.id}-on-the-fly`}
+                          placeholder="Note (optional)"
+                          type="text"
+                          id={`note-${enrollment.id}`}
+                          className="w-full min-w-0"
                         />
-                      </div>
-                      <div className="flex float-right">
-                        <button
-                          className="rounded bg-blue-500 px-2 py-1 hover:bg-blue-600"
-                          disabled={createIsLoading}
-                          onClick={() => void handleOnTheFlyTransaction(enrollment)}
-                        >
-                          Transfer
-                        </button>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    <div className="flex w-full flow-root">
-                      <div className="flex float-left">
-                        <select
-                          ref={(el) => {
-                            if (el) {
-                              transactionSelectRefs.current.set(enrollment.id, el)
-                            }
+                      </TableCell>
+                      <TableCell className="truncate" title={`${enrollment.firstName} ${enrollment.lastName}`}>
+                        {enrollment.firstName} {enrollment.lastName}
+                      </TableCell>
+                      <TableCell className="truncate" title={enrollment.email}>{enrollment.email}</TableCell>
+                      <TableCell className="truncate">
+                        {formatBalance(enrollment.checkingAccountBalance)}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled={deleteIsLoading}
+                          onClick={() => {
+                            if (!confirm(`Are you sure you want to remove ${enrollment.firstName} ${enrollment.lastName} from this class?`)) return;
+                            void deleteEnrollment({ id: enrollment.id });
                           }}
-                          className="flex h-full rounded border border-gray-400 bg-white px-2 py-2 text-gray-700"
-                          name="amount"
-                          id={`amount-${enrollment.id}`}
-                          defaultValue={undefined}
                         >
-                          <option value={undefined}>Select a transaction</option>
-                          {possibleTransactions.map((transaction) => (
-                            <option
-                              key={transaction.id}
-                              value={transaction.id}
-                            >
-                              {`${formatCurrency(transaction.amount)}  (${transaction.note})`}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="flex float-right">
-                        <button
-                          className="rounded bg-blue-500 px-2 py-1 hover:bg-blue-600"
-                          disabled={createIsLoading}
-                          onClick={() => void handleTransaction(enrollment)}
-                        >
-                          Transfer
-                        </button>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    <input
-                      ref={(el) => {
-                        if (el) {
-                          noteInputRefs.current.set(enrollment.id, el)
-                        }
-                      }}
-                      placeholder="Note (optional)"
-                      className="rounded border border-gray-400 bg-white px-2 py-1 text-gray-700"
-                      type="text"
-                      id={`note-${enrollment.id}`}
-                    />
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    {enrollment.firstName} {enrollment.lastName}
-                  </td>
-                  <td className="border border-gray-300 p-2">{enrollment.email}</td>
-                  <td className="border border-gray-300 p-2">
-                    {formatBalance(enrollment.checkingAccountBalance)}
-                  </td>
-                  <td>
-                    <button
-                      className="rounded bg-red-400 px-2 py-1 hover:bg-red-500"
-                      disabled={deleteIsLoading}
-                      onClick={() => {
-                        if (!confirm(`Are you sure you want to remove ${enrollment.firstName} ${enrollment.lastName} from this class?`)) return;
-                        void deleteEnrollment({ id: enrollment.id });
-                      }}
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
-                  </td>
-                </tr>
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
-        {/* Here ends the management table */}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+          </div>
+        {/* Here ends the student management table */}
 
-        <div>
-          <TransactionFeed classCode={classCode} />
-        </div>
+        <TransactionFeed classCode={classCode} />
 
-        <div>
-          <button
-            className="rounded bg-red-400 px-4 py-2 hover:bg-red-500"
-            disabled={deleteClassIsLoading}
-            onClick={() => {
-              if (!confirm("Are you sure you want to delete this class?")) return;
-              void deleteClass({ classCode });
-            }}
-          >
-            Delete Class
-          </button>
+          <div className="flex justify-center">
+            <Button
+              variant="destructive"
+              disabled={deleteClassIsLoading}
+              onClick={() => {
+                if (!confirm("Are you sure you want to delete this class?")) return;
+                void deleteClass({ classCode });
+              }}
+            >
+              Delete Class
+            </Button>
+          </div>
         </div>
       </PageLayout>
     </>

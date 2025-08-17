@@ -5,6 +5,18 @@ import { PageLayout } from "~/components/layout";
 import { api, type RouterOutputs } from "~/utils/api";
 import { formatBalance } from "~/utils/helpers";
 import { TrashIcon } from "@heroicons/react/20/solid";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type CustomTransaction = RouterOutputs["transaction"]["getCustomTransactions"][0];
 
@@ -23,69 +35,84 @@ const CustomTransactionList = () => {
   if (isLoading) {
     return (
       <>
-        <div className="text-xl">Your Custom Transactions</div>
-        <div>Loading...</div>
+        <div className="w-full max-w-6xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Custom Transactions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Loading...</p>
+            </CardContent>
+          </Card>
+        </div>
       </>
     );
   }
   if (!data) {
     return (
       <>
-        <div className="text-xl">Your Custom Transactions</div>
-        <div>{`You don't have any saved transactions.`}</div>
+        <div className="w-full max-w-6xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Custom Transactions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">{`You don't have any saved transactions.`}</p>
+            </CardContent>
+          </Card>
+        </div>
       </>
     );
   }
   return (
     <>
-      <div className="flex flex-col w-full items-center md:max-w-2xl">
-        <div>Your Custom Transactions</div>
-        <table className="md:min-w-full table-auto border-collapse border border-gray-300">
-          <thead>
-            <tr>
-              <th className="w-1/4 border border-gray-300 bg-gray-700 p-2">Amount</th>
-              <th className="w-3/4 border border-gray-300 bg-gray-700 p-2">Note</th>
-              <th className="min-w-[50px] border border-gray-300 bg-gray-700 p-2"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {data?.map((transaction: CustomTransaction) => {
-              return (
-                <tr
-                  key={transaction.id}
-                >
-                  <td
-                    className="w-1/8 border border-gray-300 p-2"
-                  >
-                    {formatBalance(transaction.amount)}
-                  </td>
-                  <td
-                    className="w-1/8 border border-gray-300 p-2"
-                  >
-                    {transaction.note}
-                  </td>
-                  <td
-                    className="w-1/8 border border-gray-300 p-2"
-                  >
-                    <button
-                      className="bg-red-400 hover:bg-red-500 p-2 rounded justify-center"
-                      onClick={() => {
-                        if (!confirm("Are you sure you want to delete this transaction?")) {
-                          return;
-                        }
-                        void deleteAsync(transaction.id);
-                      }}
-                      disabled={deleteIsLoading}
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table >
-      </div >
+      <div className="w-full max-w-6xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Custom Transactions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table className="w-full table-fixed">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[120px]">Amount</TableHead>
+                  <TableHead className="w-[400px]">Note</TableHead>
+                  <TableHead className="w-[60px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data?.map((transaction: CustomTransaction) => {
+                  return (
+                    <TableRow key={transaction.id}>
+                      <TableCell className="truncate">
+                        {formatBalance(transaction.amount)}
+                      </TableCell>
+                      <TableCell className="truncate" title={transaction.note}>
+                        {transaction.note}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            if (!confirm("Are you sure you want to delete this transaction?")) {
+                              return;
+                            }
+                            void deleteAsync(transaction.id);
+                          }}
+                          disabled={deleteIsLoading}
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </>
   );
 }
@@ -105,56 +132,61 @@ const CustomTransactionCreator = () => {
   });
   return (
     <>
-      <div className="flex flex-col w-full items-center border border-blue-900 rounded p-4 md:max-w-2xl">
-        <div>Create Custom Transaction</div>
-        <div className="flex flex-row w-justify-between gap-4 py-2">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!amount) {
-                toast.error("Amount is required");
-                return;
-              }
-              void mutateAsync({
-                amount: parseFloat(amount),
-                note: note,
-              });
-            }}
-          >
-            <div className="flex flow-root p-2">
-              <label className="flex w-1/2 float-left justify-between py-2" htmlFor="amount">Amount</label>
-              <span className="absolute -mr-10">$</span>
-              <input
-                className="flex float-right w-1/2 border border-gray-300 rounded-md p-2 text-slate-700"
-                type="text"
-                id="amount"
-                value={amount ?? undefined}
-                placeholder="0.00"
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </div>
-            <div className="flex flow-root p-2">
-              <label className="flex w-1/2 float-left justify-between py-2" htmlFor="note">Note</label>
-              <input
-                className="flex float-right w-1/2 border border-gray-300 rounded-md p-2 text-slate-700"
-                type="text"
-                id="note"
-                value={note}
-                placeholder="Note"
-                onChange={(e) => setNote(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-center justify-center">
-              <button
-                className="bg-blue-500 text-white p-2 rounded-md"
-                type="submit"
-                disabled={isLoading}
-              >
-                Save
-              </button>
-            </div>
-          </form>
-        </div>
+      <div className="w-full max-w-6xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle>Create Custom Transaction</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!amount) {
+                  toast.error("Amount is required");
+                  return;
+                }
+                void mutateAsync({
+                  amount: parseFloat(amount),
+                  note: note,
+                });
+              }}
+              className="space-y-4"
+            >
+              <div className="space-y-2">
+                <Label htmlFor="amount">Amount</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    type="text"
+                    id="amount"
+                    value={amount ?? ""}
+                    placeholder="0.00"
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="note">Note</Label>
+                <Input
+                  type="text"
+                  id="note"
+                  value={note}
+                  placeholder="Note"
+                  onChange={(e) => setNote(e.target.value)}
+                />
+              </div>
+              <div className="flex justify-center">
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                >
+                  Save
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </>
   );
@@ -169,8 +201,10 @@ export default function Settings() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <PageLayout>
-        <CustomTransactionCreator />
-        <CustomTransactionList />
+        <div className="space-y-6 px-4 md:px-6 lg:px-8">
+          <CustomTransactionCreator />
+          <CustomTransactionList />
+        </div>
       </PageLayout>
     </>
   );
