@@ -6,6 +6,7 @@ import {
 import { TRPCClientError } from "@trpc/client";
 import { type Enrollment } from "@prisma/client/edge";
 import { Role } from "@prisma/client";
+import { clerkClient } from "@clerk/nextjs";
 
 export const transactionRouter = createTRPCRouter({
   create: protectedProcedure
@@ -132,20 +133,55 @@ export const transactionRouter = createTRPCRouter({
         throw new TRPCClientError("You are not an admin of this class");
       }
 
-      const relevantAccounts = enrollments
-        .map((enrollment: Enrollment) => enrollment.checkingAccountId)
+      // Get all accounts in this class
+      const allAccounts = await ctx.db.account.findMany({
+        where: {
+          id: {
+            in: enrollments
+              .map((enrollment: Enrollment) => enrollment.checkingAccountId)
+              .filter((id): id is number => id !== null),
+          },
+        },
+      });
+
+      // Verify which account owners exist in Clerk
+      const validAccountIds: number[] = [];
+      await Promise.allSettled(
+        allAccounts.map(async (account) => {
+          try {
+            await clerkClient.users.getUser(account.ownerId);
+            validAccountIds.push(account.id);
+          } catch (error) {
+            console.warn(`Account owner ${account.ownerId} not found in Clerk, excluding account ${account.id} from transactions`);
+          }
+        })
+      );
 
       const transactions = await ctx.db.transaction.findMany({
         where: {
-          OR: [
+          AND: [
+            {
+              OR: [
+                {
+                  fromAccountId: {
+                    in: validAccountIds,
+                  },
+                },
+                {
+                  toAccountId: {
+                    in: validAccountIds,
+                  },
+                },
+              ],
+            },
             {
               fromAccountId: {
-                in: relevantAccounts,
+                in: validAccountIds,
               },
             },
             {
               toAccountId: {
-                in: relevantAccounts,
+                in: validAccountIds,
               },
             },
           ],
@@ -162,15 +198,15 @@ export const transactionRouter = createTRPCRouter({
 
       const totalRecords = await ctx.db.transaction.count({
         where: {
-          OR: [
+          AND: [
             {
               fromAccountId: {
-                in: relevantAccounts,
+                in: validAccountIds,
               },
             },
             {
               toAccountId: {
-                in: relevantAccounts,
+                in: validAccountIds,
               },
             },
           ],
