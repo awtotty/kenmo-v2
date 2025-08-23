@@ -26,9 +26,14 @@ export const userRouter = createTRPCRouter({
       if (!ctx.auth?.userId) {
         throw new TRPCClientError("You must be logged in to create an account");
       }
-      return cleanUserForClient(
-        await clerkClient.users.getUser(ctx.auth.userId)
-      );
+      try {
+        return cleanUserForClient(
+          await clerkClient.users.getUser(ctx.auth.userId)
+        );
+      } catch (error) {
+        console.error(`Current user ${ctx.auth.userId} not found in Clerk:`, error);
+        throw new TRPCClientError("User not found in authentication system");
+      }
     }),
 
   getAllByClassCode: protectedProcedure
