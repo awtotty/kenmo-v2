@@ -26,9 +26,14 @@ export const userRouter = createTRPCRouter({
       if (!ctx.auth?.userId) {
         throw new TRPCClientError("You must be logged in to create an account");
       }
-      return cleanUserForClient(
-        await clerkClient.users.getUser(ctx.auth.userId)
-      );
+      try {
+        return cleanUserForClient(
+          await clerkClient.users.getUser(ctx.auth.userId)
+        );
+      } catch (error) {
+        console.error(`Current user ${ctx.auth.userId} not found in Clerk:`, error);
+        throw new TRPCClientError("User not found in authentication system");
+      }
     }),
 
   getAllByClassCode: protectedProcedure
@@ -63,9 +68,20 @@ export const userRouter = createTRPCRouter({
       if (!adminIds.includes(ctx.auth?.userId ?? null)) {
         throw new Error("You are not an admin of this class");
       }
-      const users = enrollments.map(async (enrollment: Enrollment) => {
-        return await clerkClient.users.getUser(enrollment.userId);
-      });
-      return await Promise.all(users);
+      const users = await Promise.allSettled(
+        enrollments.map(async (enrollment: Enrollment) => {
+          try {
+            return await clerkClient.users.getUser(enrollment.userId);
+          } catch (error) {
+            console.warn(`User ${enrollment.userId} not found in Clerk:`, error);
+            return null;
+          }
+        })
+      );
+      
+      // Filter out failed requests and null results, return only valid users
+      return users
+        .map(result => result.status === 'fulfilled' ? result.value : null)
+        .filter((user): user is User => user !== null);
     }),
 });
