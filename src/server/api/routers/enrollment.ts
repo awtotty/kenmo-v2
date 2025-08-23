@@ -17,7 +17,13 @@ const cleanEnrollmentForClient = async (enrollment: Enrollment) => {
     },
   });
 
-  const user = await clerkClient.users.getUser(enrollment.userId);
+  let user;
+  try {
+    user = await clerkClient.users.getUser(enrollment.userId);
+  } catch (error) {
+    console.warn(`User ${enrollment.userId} not found in Clerk:`, error);
+    return null; // Return null for missing users
+  }
 
   const checkingAccount = await db.account.findFirst({
     where: {
@@ -49,12 +55,17 @@ export const enrollmentRouter = createTRPCRouter({
       },
     });
 
-    // Use Promise.all to await all promises returned by addClassNameToEnrollment
-    return await Promise.all(
+    // Use Promise.allSettled to handle missing Clerk users gracefully
+    const results = await Promise.allSettled(
       enrollments.map(
         async (enrollment: Enrollment) => await cleanEnrollmentForClient(enrollment),
       ),
     );
+    
+    // Filter out failed requests and null results, return only valid enrollments
+    return results
+      .map(result => result.status === 'fulfilled' ? result.value : null)
+      .filter((enrollment): enrollment is NonNullable<typeof enrollment> => enrollment !== null);
   }),
 
   getCurrentUserByClassCode: protectedProcedure
@@ -102,7 +113,11 @@ export const enrollmentRouter = createTRPCRouter({
         throw new Error("No enrollments found");
       }
 
-      return await cleanEnrollmentForClient(enrollments[0]);
+      const result = await cleanEnrollmentForClient(enrollments[0]);
+      if (!result) {
+        throw new Error("User not found in Clerk");
+      }
+      return result;
     }), 
 
   getAllByClassCode: protectedProcedure
@@ -145,13 +160,17 @@ export const enrollmentRouter = createTRPCRouter({
         throw new Error("You are not an admin of this class");
       }
 
-      // Use Promise.all to await all promises returned by addClassNameToEnrollment
-      return await Promise.all(
+      // Use Promise.allSettled to handle missing Clerk users gracefully
+      const results = await Promise.allSettled(
         enrollments
           .filter((enrollment: Enrollment) => enrollment.role != Role.ADMIN)
-          .map(async (enrollment: Enrollment) => await cleanEnrollmentForClient(enrollment),
-        ),
+          .map(async (enrollment: Enrollment) => await cleanEnrollmentForClient(enrollment)),
       );
+      
+      // Filter out failed requests and null results, return only valid enrollments
+      return results
+        .map(result => result.status === 'fulfilled' ? result.value : null)
+        .filter((enrollment): enrollment is NonNullable<typeof enrollment> => enrollment !== null);
     }),
 
   delete: protectedProcedure
