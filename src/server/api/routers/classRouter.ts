@@ -43,38 +43,42 @@ export const classRouter = createTRPCRouter({
         code = Math.random().toString(36).substring(2, 8).toUpperCase();
       }
 
-      const classObj = await ctx.db.class.create({
-        data: {
-          name: input?.className,
-          classCode: code,
-        },
+      const result = await ctx.db.$transaction(async (tx) => {
+        const classObj = await tx.class.create({
+          data: {
+            name: input?.className,
+            classCode: code,
+          },
+        });
+
+        if (!classObj) {
+          throw new TRPCClientError("Failed to create class");
+        }
+
+        const checkingAccount = await tx.account.create({
+          data: {
+            ownerId: ctx.auth.userId,
+            balance: 1000000,
+            interestRate: 0.0,
+            interestPeriodDays: -1,
+            name: `Checking (${classObj.name})`,
+          },
+        });
+
+        // enroll the user as an admin for the class
+        await tx.enrollment.create({
+          data: {
+            userId: ctx.auth.userId,
+            classId: classObj.id,
+            role: "ADMIN",
+            checkingAccountId: checkingAccount.id,
+          },
+        });
+
+        return classObj;
       });
 
-      if (!classObj) {
-        throw new TRPCClientError("Failed to create class");
-      }
-
-      const checkingAccount = await ctx.db.account.create({
-        data: {
-          ownerId: ctx.auth.userId,
-          balance: 1000000,
-          interestRate: 0.0,
-          interestPeriodDays: -1,
-          name: `Checking (${classObj.name})`,
-        },
-      });
-
-      // enroll the user as an admin for the class
-      await ctx.db.enrollment.create({
-        data: {
-          userId: ctx.auth.userId,
-          classId: classObj.id,
-          role: "ADMIN",
-          checkingAccountId: checkingAccount.id,
-        },
-      });
-
-      return { classCode: classObj.classCode };
+      return { classCode: result.classCode };
     }),
 
   join: protectedProcedure
@@ -110,23 +114,25 @@ export const classRouter = createTRPCRouter({
         throw new TRPCClientError("You are already enrolled in this class");
       }
 
-      const checkingAccount = await ctx.db.account.create({
-        data: {
-          ownerId: ctx.auth.userId,
-          balance: 100, // TODO: make this a param in class creation
-          interestRate: 0.2/365,
-          interestPeriodDays: 1,
-          name: `My account (${classObj.name})`,
-        },
-      });
+      await ctx.db.$transaction(async (tx) => {
+        const checkingAccount = await tx.account.create({
+          data: {
+            ownerId: ctx.auth.userId,
+            balance: 100, // TODO: make this a param in class creation
+            interestRate: 0.2/365,
+            interestPeriodDays: 1,
+            name: `My account (${classObj.name})`,
+          },
+        });
 
-      await ctx.db.enrollment.create({
-        data: {
-          userId: ctx.auth.userId,
-          classId: classObj.id,
-          role: "STUDENT",
-          checkingAccountId: checkingAccount.id,
-        },
+        await tx.enrollment.create({
+          data: {
+            userId: ctx.auth.userId,
+            classId: classObj.id,
+            role: "STUDENT",
+            checkingAccountId: checkingAccount.id,
+          },
+        });
       });
 
       return { classCode: classObj.classCode };
