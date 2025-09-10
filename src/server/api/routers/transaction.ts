@@ -18,7 +18,7 @@ export const transactionRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // verify that the user owns the from account
+      // Pre-validate accounts outside transaction for better error messages
       const fromAccount = await ctx.db.account.findFirst({
         where: {
           id: input.fromAccountId,
@@ -28,9 +28,6 @@ export const transactionRouter = createTRPCRouter({
       if (!fromAccount) {
         throw new TRPCClientError("You do not own the from account");
       }
-      // if (fromAccount.balance < input.amount) {
-      //   throw new TRPCClientError("Insufficient funds");
-      // }
 
       const toAccount = await ctx.db.account.findFirst({
         where: {
@@ -41,60 +38,57 @@ export const transactionRouter = createTRPCRouter({
         throw new TRPCClientError("The to account does not exist");
       }
 
-      // double entry book keeping
-      const ledgerEntries = await ctx.db.ledger.createMany({
-        data: [
-          {
-            accountId: input.fromAccountId,
-            debit: 0,
-            credit: input.amount,
-          },
-          {
-            accountId: input.toAccountId,
-            debit: input.amount,
-            credit: 0,
-          },
-        ],
-      });
-      if (!ledgerEntries) {
-        throw new TRPCClientError("Failed to create ledger entries");
-      }
+      // Wrap all financial operations in a single database transaction
+      return await ctx.db.$transaction(async (tx) => {
+        // Double entry bookkeeping - create ledger entries
+        await tx.ledger.createMany({
+          data: [
+            {
+              accountId: input.fromAccountId,
+              debit: 0,
+              credit: input.amount,
+            },
+            {
+              accountId: input.toAccountId,
+              debit: input.amount,
+              credit: 0,
+            },
+          ],
+        });
 
-      // update the account balances
-      const updatedFromAccount = await ctx.db.account.update({
-        where: {
-          id: input.fromAccountId,
-        },
-        data: {
-          balance: fromAccount.balance - input.amount,
-        },
-      });
-      if (!updatedFromAccount) {
-        throw new TRPCClientError("Failed to update from account balance");
-      }
-      const updatedToAccount = await ctx.db.account.update({
-        where: {
-          id: input.toAccountId,
-        },
-        data: {
-          balance: toAccount.balance + input.amount,
-        },
-      });
-      if (!updatedToAccount) {
-        throw new TRPCClientError("Failed to update to account balance");
-      }
-
-      if (input.amount !== 0) {
-        await ctx.db.transaction.create({
+        // Update account balances
+        await tx.account.update({
+          where: {
+            id: input.fromAccountId,
+          },
           data: {
-            fromAccountId: input.fromAccountId,
-            toAccountId: input.toAccountId,
-            amount: input.amount,
-            note: input.note ?? "",
+            balance: fromAccount.balance - input.amount,
           },
         });
-      }
-      return true;
+
+        await tx.account.update({
+          where: {
+            id: input.toAccountId,
+          },
+          data: {
+            balance: toAccount.balance + input.amount,
+          },
+        });
+
+        // Create transaction record if amount is non-zero
+        if (input.amount !== 0) {
+          await tx.transaction.create({
+            data: {
+              fromAccountId: input.fromAccountId,
+              toAccountId: input.toAccountId,
+              amount: input.amount,
+              note: input.note ?? "",
+            },
+          });
+        }
+
+        return true;
+      });
     }),
 
   getAllByClassCode: protectedProcedure
