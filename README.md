@@ -1,5 +1,5 @@
 # Kenmo
-Kenmo is a digital platform for sending an receiving Ken Kash, an educational
+Kenmo is a digital platform for sending and receiving Ken Kash, an educational
 currency used in the math classroom. Ken Kash was created by Ken Asher and has 
 been used in his classroom for decades. Kenmo is the digital platform for paperless
 Ken Kash. 
