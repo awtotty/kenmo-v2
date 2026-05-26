@@ -10,7 +10,8 @@
     "dev": "next dev",
     "postinstall": "prisma generate",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "verify:phase1": "node scripts/verify-phase1.mjs && SKIP_ENV_VALIDATION=1 tsx scripts/phase1-regression.test.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^4.29.3",
@@ -56,6 +57,7 @@
     "prettier-plugin-tailwindcss": "^0.5.11",
     "prisma": "^5.8.0",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.22.3",
     "typescript": "^5.3.3"
   },
   "ct3aMetadata": {

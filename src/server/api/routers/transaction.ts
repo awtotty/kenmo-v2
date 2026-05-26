@@ -1,46 +1,112 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import {
   createTRPCRouter,
   protectedProcedure,
 } from "~/server/api/trpc";
-import { TRPCClientError } from "@trpc/client";
 import { type Enrollment } from "@prisma/client/edge";
 import { Role } from "@prisma/client";
+
+const centsAmount = z
+  .number()
+  .finite()
+  .positive()
+  .refine((amount) => Math.round(amount * 100) > 0, {
+    message: "Amount must be at least $0.01",
+  })
+  .transform((amount) => Math.round(amount * 100) / 100);
 
 export const transactionRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
       z.object({
-        fromAccountId: z.number(),
-        toAccountId: z.number(),
-        amount: z.number(),
+        fromAccountId: z.number().int().positive(),
+        toAccountId: z.number().int().positive(),
+        amount: centsAmount,
         note: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Pre-validate accounts outside transaction for better error messages
-      const fromAccount = await ctx.db.account.findFirst({
-        where: {
-          id: input.fromAccountId,
-          ownerId: ctx.auth?.userId,
-        },
-      });
-      if (!fromAccount) {
-        throw new TRPCClientError("You do not own the from account");
+      if (input.fromAccountId === input.toAccountId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot transfer to the same account",
+        });
       }
 
-      const toAccount = await ctx.db.account.findFirst({
-        where: {
-          id: input.toAccountId,
-        },
-      });
-      if (!toAccount) {
-        throw new TRPCClientError("The to account does not exist");
-      }
-
-      // Wrap all financial operations in a single database transaction
+      // Keep authorization checks and financial writes in one database transaction.
       return await ctx.db.$transaction(async (tx) => {
-        // Double entry bookkeeping - create ledger entries
+        const [fromEnrollment, toEnrollment] = await Promise.all([
+          tx.enrollment.findFirst({
+            where: {
+              checkingAccountId: input.fromAccountId,
+              class: { deletedAt: null },
+            },
+          }),
+          tx.enrollment.findFirst({
+            where: {
+              checkingAccountId: input.toAccountId,
+              class: { deletedAt: null },
+            },
+          }),
+        ]);
+
+        if (!fromEnrollment) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "The from account does not belong to an active class",
+          });
+        }
+
+        if (!toEnrollment) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "The to account does not belong to an active class",
+          });
+        }
+
+        if (fromEnrollment.classId !== toEnrollment.classId) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Transfers must stay within the same active class",
+          });
+        }
+
+        const actorEnrollment = await tx.enrollment.findFirst({
+          where: {
+            userId: ctx.auth.userId,
+            classId: fromEnrollment.classId,
+            class: { deletedAt: null },
+          },
+        });
+
+        if (!actorEnrollment) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You are not enrolled in this class",
+          });
+        }
+
+        const actorIsAdmin = actorEnrollment.role === Role.ADMIN;
+        const actorOwnsFromAccount = fromEnrollment.userId === ctx.auth.userId;
+        const targetIsTeacherOrAdmin =
+          toEnrollment.role === Role.ADMIN || toEnrollment.role === Role.TEACHER;
+
+        if (!actorOwnsFromAccount && !actorIsAdmin) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You cannot transfer from this account",
+          });
+        }
+
+        if (!actorIsAdmin && !targetIsTeacherOrAdmin) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Students can only transfer to teacher, admin, or bank accounts",
+          });
+        }
+
+        // Double entry bookkeeping - create ledger entries.
         await tx.ledger.createMany({
           data: [
             {
@@ -56,13 +122,13 @@ export const transactionRouter = createTRPCRouter({
           ],
         });
 
-        // Update account balances
+        // Atomic balance updates. Overdrafts are allowed by current product policy.
         await tx.account.update({
           where: {
             id: input.fromAccountId,
           },
           data: {
-            balance: fromAccount.balance - input.amount,
+            balance: { decrement: input.amount },
           },
         });
 
@@ -71,21 +137,18 @@ export const transactionRouter = createTRPCRouter({
             id: input.toAccountId,
           },
           data: {
-            balance: toAccount.balance + input.amount,
+            balance: { increment: input.amount },
           },
         });
 
-        // Create transaction record if amount is non-zero
-        if (input.amount !== 0) {
-          await tx.transaction.create({
-            data: {
-              fromAccountId: input.fromAccountId,
-              toAccountId: input.toAccountId,
-              amount: input.amount,
-              note: input.note ?? "",
-            },
-          });
-        }
+        await tx.transaction.create({
+          data: {
+            fromAccountId: input.fromAccountId,
+            toAccountId: input.toAccountId,
+            amount: input.amount,
+            note: input.note ?? "",
+          },
+        });
 
         return true;
       });
@@ -103,10 +166,11 @@ export const transactionRouter = createTRPCRouter({
       const classObj = await ctx.db.class.findFirst({
         where: {
           classCode: input.classCode,
+          deletedAt: null,
         },
       });
       if (!classObj) {
-        throw new TRPCClientError("Class not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
       }
 
       const enrollments = await ctx.db.enrollment.findMany({
@@ -115,7 +179,7 @@ export const transactionRouter = createTRPCRouter({
         },
       });
       if (!enrollments) {
-        throw new TRPCClientError("No enrollments found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "No enrollments found" });
       }
 
       // ensure user is admin of class
@@ -123,7 +187,7 @@ export const transactionRouter = createTRPCRouter({
         (enrollment: Enrollment) => enrollment.userId === ctx.auth.userId,
       );
       if (!userEnrollment || userEnrollment.role !== Role.ADMIN) {
-        throw new TRPCClientError("You are not an admin of this class");
+        throw new TRPCError({ code: "FORBIDDEN", message: "You are not an admin of this class" });
       }
 
       const relevantAccounts = enrollments
@@ -151,7 +215,7 @@ export const transactionRouter = createTRPCRouter({
         },
       });
       if (!transactions) {
-        throw new TRPCClientError("No transactions found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "No transactions found" });
       }
 
       const totalRecords = await ctx.db.transaction.count({
@@ -193,7 +257,7 @@ export const transactionRouter = createTRPCRouter({
         },
       });
       if (!account) {
-        throw new TRPCClientError("Account not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Account not found" });
       }
 
       const transactions = await ctx.db.transaction.findMany({
@@ -214,7 +278,7 @@ export const transactionRouter = createTRPCRouter({
         },
       });
       if (!transactions) {
-        throw new TRPCClientError("No transactions found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "No transactions found" });
       }
 
       const totalRecords = await ctx.db.transaction.count({
@@ -252,7 +316,7 @@ export const transactionRouter = createTRPCRouter({
   createCustomTransaction: protectedProcedure
     .input(
       z.object({
-        amount: z.number(),
+        amount: centsAmount,
         note: z.string().optional(),
       }),
     )
@@ -263,7 +327,7 @@ export const transactionRouter = createTRPCRouter({
         },
       });
       if (customTransactionsList.length >= 100) {
-        throw new TRPCClientError("You have reached the limit of 100 custom transactions");
+        throw new TRPCError({ code: "BAD_REQUEST", message: "You have reached the limit of 100 custom transactions" });
       }
       const customTransaction = await ctx.db.customTransaction.create({
         data: {
@@ -284,10 +348,10 @@ export const transactionRouter = createTRPCRouter({
         },
       });
       if (!customTransaction) {
-        throw new TRPCClientError("Custom transaction not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Custom transaction not found" });
       }
       if (ctx.auth?.userId !== customTransaction.ownerId) {
-        throw new TRPCClientError("You do not own the custom transaction");
+        throw new TRPCError({ code: "FORBIDDEN", message: "You do not own the custom transaction" });
       }
       await ctx.db.customTransaction.delete({
         where: {
