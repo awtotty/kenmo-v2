@@ -1,10 +1,10 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 import {
   createTRPCRouter,
   protectedProcedure,
 } from "~/server/api/trpc";
-import { TRPCClientError } from "@trpc/client";
 
 export const classRouter = createTRPCRouter({
   create: protectedProcedure
@@ -14,15 +14,11 @@ export const classRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.auth?.userId) {
-        throw new TRPCClientError("You must be logged in to create a class");
-      }
-
       // check if the user is already enrolled in a class with the same name
       while (true) {
         const existingEnrollment = await ctx.db.enrollment.findFirst({
           where: {
-            userId: ctx.auth?.userId ?? null,
+            userId: ctx.auth.userId,
             class: {
               name: input.className,
               deletedAt: null,
@@ -52,7 +48,7 @@ export const classRouter = createTRPCRouter({
         });
 
         if (!classObj) {
-          throw new TRPCClientError("Failed to create class");
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create class" });
         }
 
         const checkingAccount = await tx.account.create({
@@ -88,10 +84,6 @@ export const classRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.auth?.userId) {
-        throw new TRPCClientError("You must be logged in to join a class");
-      }
-
       const classObj = await ctx.db.class.findFirst({
         where: {
           classCode: input.classCode.toUpperCase(),
@@ -100,7 +92,7 @@ export const classRouter = createTRPCRouter({
       });
 
       if (!classObj) {
-        throw new TRPCClientError("Class not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
       }
 
       const enrollment = await ctx.db.enrollment.findFirst({
@@ -111,7 +103,7 @@ export const classRouter = createTRPCRouter({
       });
 
       if (enrollment) {
-        throw new TRPCClientError("You are already enrolled in this class");
+        throw new TRPCError({ code: "BAD_REQUEST", message: "You are already enrolled in this class" });
       }
 
       await ctx.db.$transaction(async (tx) => {
@@ -145,10 +137,6 @@ export const classRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.auth?.userId) {
-        throw new TRPCClientError("You must be logged in to delete a class");
-      }
-
       const classObj = await ctx.db.class.findFirst({
         where: {
           classCode: input.classCode,
@@ -157,7 +145,7 @@ export const classRouter = createTRPCRouter({
       });
 
       if (!classObj) {
-        throw new TRPCClientError("Class not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
       }
 
       const enrollment = await ctx.db.enrollment.findFirst({
@@ -169,7 +157,7 @@ export const classRouter = createTRPCRouter({
       });
 
       if (!enrollment) {
-        throw new TRPCClientError("You are not an admin of this class");
+        throw new TRPCError({ code: "FORBIDDEN", message: "You are not an admin of this class" });
       }
 
       // soft delete the class by setting deletedAt timestamp
@@ -200,7 +188,7 @@ export const classRouter = createTRPCRouter({
       });
 
       if (!classObj) {
-        throw new TRPCClientError("Class not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
       }
 
       return { className: classObj.name, classCode: classObj.classCode };

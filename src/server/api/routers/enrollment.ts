@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 import {
   createTRPCRouter,
@@ -48,7 +49,7 @@ export const enrollmentRouter = createTRPCRouter({
   getAllCurrentUser: protectedProcedure.query(async ({ ctx }) => {
     const enrollments = await ctx.db.enrollment.findMany({
       where: {
-        userId: ctx.auth?.userId ?? null,
+        userId: ctx.auth.userId,
         class: {
           deletedAt: null,
         },
@@ -75,11 +76,7 @@ export const enrollmentRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.auth?.userId) {
-        throw new Error("You must be logged in to view this class");
-      }
-
-      const classObj = await db.class.findFirst({
+      const classObj = await ctx.db.class.findFirst({
         where: {
           classCode: input.classCode,
           deletedAt: null,
@@ -87,7 +84,7 @@ export const enrollmentRouter = createTRPCRouter({
       });
 
       if (!classObj) {
-        throw new Error("Class not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
       }
 
       const enrollments = await ctx.db.enrollment.findMany({
@@ -97,25 +94,17 @@ export const enrollmentRouter = createTRPCRouter({
         },
       });
 
-      if (!enrollments) {
-        throw new Error("No enrollments found");
-      }
-
       if (1 < enrollments.length) {
-        throw new Error("Multiple enrollments found");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Multiple enrollments found" });
       }
 
-      if (0 === enrollments.length) {
-        throw new Error("No enrollments found");
-      }
-
-      if (!enrollments[0]) {
-        throw new Error("No enrollments found");
+      if (0 === enrollments.length || !enrollments[0]) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "No enrollments found" });
       }
 
       const result = await cleanEnrollmentForClient(enrollments[0]);
       if (!result) {
-        throw new Error("User not found in Clerk");
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found in Clerk" });
       }
       return result;
     }), 
@@ -127,11 +116,7 @@ export const enrollmentRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.auth?.userId) {
-        throw new Error("You must be logged in to view this class");
-      }
-
-      const classObj = await db.class.findFirst({
+      const classObj = await ctx.db.class.findFirst({
         where: {
           classCode: input.classCode,
           deletedAt: null,
@@ -139,25 +124,25 @@ export const enrollmentRouter = createTRPCRouter({
       });
 
       if (!classObj) {
-        throw new Error("Class not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
       }
 
       const enrollments = await ctx.db.enrollment.findMany({
         where: {
-          classId: classObj?.id,
+          classId: classObj.id,
         },
       });
 
       if (!enrollments) {
-        throw new Error("No enrollments found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "No enrollments found" });
       }
 
       const adminIds = enrollments
         .filter((enrollment: Enrollment) => enrollment.role === Role.ADMIN)
         .map((enrollment: Enrollment) => enrollment.userId);
 
-      if (!adminIds.includes(ctx.auth?.userId ?? null)) {
-        throw new Error("You are not an admin of this class");
+      if (!adminIds.includes(ctx.auth.userId)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You are not an admin of this class" });
       }
 
       // Use Promise.allSettled to handle missing Clerk users gracefully
@@ -179,30 +164,36 @@ export const enrollmentRouter = createTRPCRouter({
       const enrollment = await ctx.db.enrollment.findFirst({
         where: {
           id: input.id,
+          class: {
+            deletedAt: null,
+          },
         },
       });
 
       if (!enrollment) {
-        throw new Error("Enrollment not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Enrollment not found" });
       }
 
       const adminIds = await ctx.db.enrollment.findMany({
         where: {
           classId: enrollment.classId,
           role: Role.ADMIN,
+          class: {
+            deletedAt: null,
+          },
         },
       });
 
       if (!adminIds) {
-        throw new Error("No admins found for this class");
+        throw new TRPCError({ code: "NOT_FOUND", message: "No admins found for this class" });
       }
 
       if (
         !adminIds
           .map((enrollment: Enrollment) => enrollment.userId)
-          .includes(ctx.auth?.userId ?? null)
+          .includes(ctx.auth.userId)
       ) {
-        throw new Error("You are not an admin of this class");
+        throw new TRPCError({ code: "FORBIDDEN", message: "You are not an admin of this class" });
       }
 
       const deletedEnrollment = await ctx.db.enrollment.delete({
@@ -212,7 +203,7 @@ export const enrollmentRouter = createTRPCRouter({
       });
 
       if (!deletedEnrollment) {
-        throw new Error("Failed to delete enrollment");
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to delete enrollment" });
       }
 
       return deletedEnrollment;
