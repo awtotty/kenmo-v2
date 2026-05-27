@@ -1,7 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { type Account } from "@prisma/client/edge";
 import { env } from "~/env";
+import { writeAuditLog } from "~/server/audit";
 import { db } from "~/server/db";
+import { captureException, logger } from "~/server/logger";
 import { toFixedTrunc } from "~/utils/helpers";
 
 export const dynamic = "force-dynamic"; // static by default, unless reading the request
@@ -92,6 +94,22 @@ export const applyInterest = async (accountIds?: number[], dbClient = db) => {
         data: { balance: { increment: application.interestAmount } },
       });
     }
+
+    await writeAuditLog(tx, {
+      actorUserId: null,
+      action: "cron.interest.apply",
+      entityType: "CronInterestRun",
+      entityId: null,
+      classId: null,
+      metadata: {
+        accountIds: interestApplications.map((application) => application.accountId),
+        applied: interestApplications.length,
+        totalInterest: interestApplications.reduce(
+          (total, application) => Math.round((total + application.interestAmount) * 100) / 100,
+          0,
+        ),
+      },
+    });
   });
 
   return { applied: interestApplications.length };
@@ -123,7 +141,7 @@ export const createCronHandler = ({
     res: NextApiResponse,
   ) {
     if (!cronSecret) {
-      console.error("CRON_SECRET is not configured; refusing to run cron job");
+      logger.error("cron secret missing", { operation: "cron.interest", status: "misconfigured" });
       return res.status(500).json({ message: "Cron is not configured" });
     }
 
@@ -142,7 +160,10 @@ export const createCronHandler = ({
       const result = await applyInterestFn(accountIds);
       res.status(200).json({ message: "Applied interest to accounts", ...result });
     } catch (e) {
-      console.error("Failed to apply interest for accounts", e);
+      captureException(e, {
+        operation: "cron.interest.apply",
+        accountIds,
+      });
       res.status(500).json({ message: "Failed to apply interest to accounts" });
     }
   };

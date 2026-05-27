@@ -85,7 +85,13 @@ function makeDb(options: MockDbOptions = {}) {
       },
     },
     transaction: {
-      create: async (args: any) => calls.transactionCreate.push(args),
+      create: async (args: any) => {
+        calls.transactionCreate.push(args);
+        return { id: calls.transactionCreate.length, ...args.data };
+      },
+    },
+    auditLog: {
+      create: async () => undefined,
     },
   };
 

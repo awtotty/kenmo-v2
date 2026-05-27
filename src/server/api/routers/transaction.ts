@@ -6,6 +6,8 @@ import {
 } from "~/server/api/trpc";
 import { type Enrollment } from "@prisma/client/edge";
 import { Role } from "@prisma/client";
+import { writeAuditLog } from "~/server/audit";
+import { captureException } from "~/server/logger";
 
 const centsAmount = z
   .number()
@@ -34,8 +36,9 @@ export const transactionRouter = createTRPCRouter({
         });
       }
 
-      // Keep authorization checks and financial writes in one database transaction.
-      return await ctx.db.$transaction(async (tx) => {
+      try {
+        // Keep authorization checks and financial writes in one database transaction.
+        return await ctx.db.$transaction(async (tx) => {
         const [fromEnrollment, toEnrollment] = await Promise.all([
           tx.enrollment.findFirst({
             where: {
@@ -141,7 +144,7 @@ export const transactionRouter = createTRPCRouter({
           },
         });
 
-        await tx.transaction.create({
+        const transaction = await tx.transaction.create({
           data: {
             fromAccountId: input.fromAccountId,
             toAccountId: input.toAccountId,
@@ -150,8 +153,33 @@ export const transactionRouter = createTRPCRouter({
           },
         });
 
-        return true;
-      });
+        await writeAuditLog(tx, {
+          actorUserId: ctx.auth.userId,
+          action: "transaction.create",
+          entityType: "Transaction",
+          entityId: transaction.id,
+          classId: fromEnrollment.classId,
+          metadata: {
+            fromAccountId: input.fromAccountId,
+            toAccountId: input.toAccountId,
+            amount: input.amount,
+            actorRole: actorEnrollment.role,
+          },
+        });
+
+          return true;
+        });
+      } catch (error) {
+        if (!(error instanceof TRPCError)) {
+          captureException(error, {
+            operation: "transaction.create",
+            userId: ctx.auth.userId,
+            fromAccountId: input.fromAccountId,
+            toAccountId: input.toAccountId,
+          });
+        }
+        throw error;
+      }
     }),
 
   getAllByClassCode: protectedProcedure

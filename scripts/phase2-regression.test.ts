@@ -44,6 +44,7 @@ async function run() {
     transactionCreateMany: [] as unknown[],
     ledgerCreateMany: [] as unknown[],
     accountUpdate: [] as unknown[],
+    auditLogCreate: [] as unknown[],
   };
   const mockDb = {
     account: {
@@ -65,9 +66,13 @@ async function run() {
       account: {
         update: async (args: unknown) => atomicCalls.accountUpdate.push(args),
       },
+      auditLog: {
+        create: async (args: unknown) => atomicCalls.auditLogCreate.push(args),
+      },
     }),
   };
 
+  process.env.AUDIT_LOG_ENABLED = "true";
   assert.deepEqual(await applyInterest([10, 11], mockDb as any), { applied: 1 });
   assert.deepEqual(atomicCalls.findMany, [{ where: { id: { in: [10, 11] } } }]);
   assert.deepEqual(atomicCalls.transactionCreateMany, [{
@@ -88,6 +93,17 @@ async function run() {
     where: { id: 10 },
     data: { balance: { increment: 0.05 } },
   }]);
+  assert.deepEqual(atomicCalls.auditLogCreate, [{
+    data: {
+      actorUserId: null,
+      action: "cron.interest.apply",
+      entityType: "CronInterestRun",
+      entityId: null,
+      classId: null,
+      metadata: { accountIds: [10], applied: 1, totalInterest: 0.05 },
+    },
+  }]);
+  delete process.env.AUDIT_LOG_ENABLED;
 
   const missingSecretRes = mockRes();
   await createCronHandler({ cronSecret: undefined, applyInterestFn: async () => ({ applied: 0 }) })(

@@ -5,6 +5,8 @@ import {
   createTRPCRouter,
   protectedProcedure,
 } from "~/server/api/trpc";
+import { writeAuditLog } from "~/server/audit";
+import { captureException } from "~/server/logger";
 
 export const classRouter = createTRPCRouter({
   create: protectedProcedure
@@ -137,40 +139,65 @@ export const classRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const classObj = await ctx.db.class.findFirst({
-        where: {
-          classCode: input.classCode,
-          deletedAt: null,
-        },
-      });
+      try {
+        const classObj = await ctx.db.class.findFirst({
+          where: {
+            classCode: input.classCode,
+            deletedAt: null,
+          },
+        });
 
-      if (!classObj) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
+        if (!classObj) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
+        }
+
+        const enrollment = await ctx.db.enrollment.findFirst({
+          where: {
+            userId: ctx.auth.userId,
+            classId: classObj.id,
+            role: "ADMIN",
+          },
+        });
+
+        if (!enrollment) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "You are not an admin of this class" });
+        }
+
+        await ctx.db.$transaction(async (tx) => {
+          // soft delete the class by setting deletedAt timestamp
+          await tx.class.update({
+            where: {
+              id: classObj.id,
+            },
+            data: {
+              deletedAt: new Date(),
+            },
+          });
+
+          await writeAuditLog(tx, {
+            actorUserId: ctx.auth.userId,
+            action: "class.delete",
+            entityType: "Class",
+            entityId: classObj.id,
+            classId: classObj.id,
+            metadata: {
+              classCode: classObj.classCode,
+              className: classObj.name,
+            },
+          });
+        });
+
+        return { classCode: classObj.classCode };
+      } catch (error) {
+        if (!(error instanceof TRPCError)) {
+          captureException(error, {
+            operation: "class.delete",
+            userId: ctx.auth.userId,
+            classCode: input.classCode,
+          });
+        }
+        throw error;
       }
-
-      const enrollment = await ctx.db.enrollment.findFirst({
-        where: {
-          userId: ctx.auth.userId,
-          classId: classObj.id,
-          role: "ADMIN",
-        },
-      });
-
-      if (!enrollment) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "You are not an admin of this class" });
-      }
-
-      // soft delete the class by setting deletedAt timestamp
-      await ctx.db.class.update({
-        where: {
-          id: classObj.id,
-        },
-        data: {
-          deletedAt: new Date(),
-        },
-      });
-
-      return { classCode: classObj.classCode };
     }),
 
   getByClassCode: protectedProcedure

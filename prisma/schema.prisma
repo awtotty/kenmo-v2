@@ -69,6 +69,23 @@ model CustomTransaction {
   createdAt     DateTime @default(now())
 }
 
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  actorUserId String?
+  action      String
+  entityType  String
+  entityId    String?
+  classId     Int?
+  metadata    Json
+  createdAt   DateTime @default(now())
+
+  @@index([actorUserId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([classId])
+  @@index([createdAt])
+}
+
 enum Role {
   STUDENT
   TEACHER

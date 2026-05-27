@@ -9,6 +9,8 @@ import type { Enrollment } from "@prisma/client/edge";
 import { db } from "~/server/db";
 import { Role } from "@prisma/client";
 import { clerkClient } from "@clerk/nextjs";
+import { writeAuditLog } from "~/server/audit";
+import { captureException } from "~/server/logger";
 
 const cleanEnrollmentForClient = async (enrollment: Enrollment) => {
   const classObj = await db.class.findFirst({
@@ -161,51 +163,79 @@ export const enrollmentRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      const enrollment = await ctx.db.enrollment.findFirst({
-        where: {
-          id: input.id,
-          class: {
-            deletedAt: null,
+      try {
+        const enrollment = await ctx.db.enrollment.findFirst({
+          where: {
+            id: input.id,
+            class: {
+              deletedAt: null,
+            },
           },
-        },
-      });
+        });
 
-      if (!enrollment) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Enrollment not found" });
-      }
+        if (!enrollment) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Enrollment not found" });
+        }
 
-      const adminIds = await ctx.db.enrollment.findMany({
-        where: {
-          classId: enrollment.classId,
-          role: Role.ADMIN,
-          class: {
-            deletedAt: null,
+        const adminIds = await ctx.db.enrollment.findMany({
+          where: {
+            classId: enrollment.classId,
+            role: Role.ADMIN,
+            class: {
+              deletedAt: null,
+            },
           },
-        },
-      });
+        });
 
-      if (!adminIds) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "No admins found for this class" });
+        if (!adminIds) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "No admins found for this class" });
+        }
+
+        if (
+          !adminIds
+            .map((enrollment: Enrollment) => enrollment.userId)
+            .includes(ctx.auth.userId)
+        ) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "You are not an admin of this class" });
+        }
+
+        const deletedEnrollment = await ctx.db.$transaction(async (tx) => {
+          const deleted = await tx.enrollment.delete({
+            where: {
+              id: input.id,
+            },
+          });
+
+          await writeAuditLog(tx, {
+            actorUserId: ctx.auth.userId,
+            action: "enrollment.delete",
+            entityType: "Enrollment",
+            entityId: deleted.id,
+            classId: deleted.classId,
+            metadata: {
+              deletedUserId: deleted.userId,
+              deletedRole: deleted.role,
+              checkingAccountId: deleted.checkingAccountId,
+            },
+          });
+
+          return deleted;
+        });
+
+        if (!deletedEnrollment) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to delete enrollment" });
+        }
+
+        return deletedEnrollment;
+      } catch (error) {
+        if (!(error instanceof TRPCError)) {
+          captureException(error, {
+            operation: "enrollment.delete",
+            userId: ctx.auth.userId,
+            enrollmentId: input.id,
+          });
+        }
+        throw error;
       }
-
-      if (
-        !adminIds
-          .map((enrollment: Enrollment) => enrollment.userId)
-          .includes(ctx.auth.userId)
-      ) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "You are not an admin of this class" });
-      }
-
-      const deletedEnrollment = await ctx.db.enrollment.delete({
-        where: {
-          id: input.id,
-        },
-      });
-
-      if (!deletedEnrollment) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to delete enrollment" });
-      }
-
-      return deletedEnrollment;
     }),
 });
