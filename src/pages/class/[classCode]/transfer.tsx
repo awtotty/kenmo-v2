@@ -38,27 +38,30 @@ export default function ClassPage() {
   const [toAccountId, setToAccountId] = useState<string>("");
   const [amountInput, setAmountInput] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState<string>("");
+  const selectedFromAccountId = parseInt(fromAccountId, 10);
+  const hasSelectedFromAccount = Number.isInteger(selectedFromAccountId) && selectedFromAccountId > 0;
+  const hasClassCode = !!classCode;
   const { data: transactionsData } =
     api.transaction.getAllByAccountId.useQuery({
-      accountId: parseInt(fromAccountId, 10),
+      accountId: selectedFromAccountId,
       page: page,
       pageSize: pageSize,
-    });
+    }, { enabled: hasSelectedFromAccount });
 
   const user = api.user.getCurrentUser.useQuery().data;
 
   const { data: userEnrollment } =
-    api.enrollment.getCurrentUserByClassCode.useQuery({ classCode });
+    api.enrollment.getCurrentUserByClassCode.useQuery({ classCode }, { enabled: hasClassCode });
   useEffect(() => {
     setEnrollment(userEnrollment ?? null);
   }, [userEnrollment]);
 
-  const classInfo = api.class.getByClassCode.useQuery({ classCode });
+  const classInfo = api.class.getByClassCode.useQuery({ classCode }, { enabled: hasClassCode });
   // query the accounts with this class code and set the fromItems and toItems
   const { data: userAccounts } =
-    api.account.getAllByClassCode.useQuery({ classCode });
+    api.account.getAllByClassCode.useQuery({ classCode }, { enabled: hasClassCode });
   const { data: classBankAccounts } =
-    api.account.getBankAccountsByClassCode.useQuery({ classCode });
+    api.account.getBankAccountsByClassCode.useQuery({ classCode }, { enabled: hasClassCode });
 
   const { mutateAsync: createTransaction, isLoading } =
     api.transaction.create.useMutation({

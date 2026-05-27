@@ -14,7 +14,8 @@
     "verify:phase1": "node scripts/verify-phase1.mjs && SKIP_ENV_VALIDATION=1 tsx scripts/phase1-regression.test.ts",
     "verify:phase2": "node scripts/verify-phase2.mjs && SKIP_ENV_VALIDATION=1 tsx scripts/phase2-regression.test.ts",
     "verify:phase3": "node scripts/verify-phase3.mjs && SKIP_ENV_VALIDATION=1 tsx scripts/phase3-regression.test.ts",
-    "verify:phase4": "node scripts/verify-phase4.mjs && SKIP_ENV_VALIDATION=1 tsx scripts/phase4-regression.test.ts"
+    "verify:phase4": "node scripts/verify-phase4.mjs && SKIP_ENV_VALIDATION=1 tsx scripts/phase4-regression.test.ts",
+    "verify:phase5": "node scripts/verify-phase5.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^4.29.3",

@@ -28,7 +28,10 @@ model Enrollment {
   checkingAccountId   Int
   class               Class  @relation(fields: [classId], references: [id])
 
-  @@index([id])
+  @@index([userId])
+  @@index([classId])
+  @@index([classId, userId])
+  @@index([classId, role])
 }
 
 model Class {
@@ -59,6 +62,9 @@ model Transaction {
   amount        Float
   createdAt     DateTime @default(now())
   note          String
+
+  @@index([fromAccountId, createdAt])
+  @@index([toAccountId, createdAt])
 }
 
 model CustomTransaction {
@@ -67,6 +73,8 @@ model CustomTransaction {
   ownerId String
   note    String
   createdAt     DateTime @default(now())
+
+  @@index([ownerId])
 }
 
 model AuditLog {
