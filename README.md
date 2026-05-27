@@ -18,3 +18,11 @@ existing classes as a student. Teachers of classes can send and receive money
 from any student in the class. Students of a class can send money to their teacher. 
 All transactions have optional notes for recordkeeping, and all transaction are 
 logged in a double-entry ledger. 
+
+## Development quality gates
+
+- `npm run lint` checks Next/TypeScript lint rules.
+- `npm run typecheck` runs TypeScript without emitting files.
+- `npm run verify` runs the phase-specific stabilization regression checks.
+- `npm run quality` runs verification, typecheck, and lint together.
+- `npm run build` creates a production Next build and requires the deployment environment variables, including Clerk/Sentry values.
