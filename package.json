@@ -10,7 +10,16 @@
     "dev": "next dev",
     "postinstall": "prisma generate",
     "lint": "next lint",
-    "start": "next start"
+    "typecheck": "tsc --noEmit",
+    "quality": "npm run verify && npm run typecheck && SKIP_ENV_VALIDATION=1 npm run lint",
+    "start": "next start",
+    "verify": "npm run verify:phase1 && npm run verify:phase2 && npm run verify:phase3 && npm run verify:phase4 && npm run verify:phase5 && npm run verify:phase6",
+    "verify:phase1": "node scripts/verify-phase1.mjs && SKIP_ENV_VALIDATION=1 tsx scripts/phase1-regression.test.ts",
+    "verify:phase2": "node scripts/verify-phase2.mjs && SKIP_ENV_VALIDATION=1 tsx scripts/phase2-regression.test.ts",
+    "verify:phase3": "node scripts/verify-phase3.mjs && SKIP_ENV_VALIDATION=1 tsx scripts/phase3-regression.test.ts",
+    "verify:phase4": "node scripts/verify-phase4.mjs && SKIP_ENV_VALIDATION=1 tsx scripts/phase4-regression.test.ts",
+    "verify:phase5": "node scripts/verify-phase5.mjs",
+    "verify:phase6": "node scripts/verify-phase6.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^4.29.3",
@@ -56,6 +65,7 @@
     "prettier-plugin-tailwindcss": "^0.5.11",
     "prisma": "^5.8.0",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.22.3",
     "typescript": "^5.3.3"
   },
   "ct3aMetadata": {

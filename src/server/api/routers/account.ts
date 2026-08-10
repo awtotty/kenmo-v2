@@ -1,10 +1,10 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 import {
   createTRPCRouter,
   protectedProcedure,
 } from "~/server/api/trpc";
-import { TRPCClientError } from "@trpc/client";
 import type { Enrollment } from "@prisma/client/edge";
 
 export const accountRouter = createTRPCRouter({
@@ -16,21 +16,11 @@ export const accountRouter = createTRPCRouter({
         interestPeriodDays: z.number(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.auth?.userId) {
-        throw new TRPCClientError("You must be logged in to create an account");
-      }
-
-      const newAccount = await ctx.db.account.create({
-        data: {
-          ownerId: ctx.auth.userId,
-          balance: input.balance,
-          interestRate: input.interestRate,
-          interestPeriodDays: input.interestPeriodDays,
-        },
+    .mutation(() => {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Direct account creation is restricted to class creation and enrollment flows",
       });
-
-      return newAccount;
     }),
 
   // TODO: rename this to getAllCurrentUser
@@ -50,18 +40,15 @@ export const accountRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.auth?.userId) {
-        throw new TRPCClientError("You must be logged in to view this class");
-      }
-
       const classObj = await ctx.db.class.findFirst({
         where: {
           classCode: input.classCode,
+          deletedAt: null,
         },
       });
 
       if (!classObj) {
-        throw new TRPCClientError("Class not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
       }
 
       const enrollments = await ctx.db.enrollment.findMany({
@@ -72,7 +59,7 @@ export const accountRouter = createTRPCRouter({
       });
 
       if (!enrollments) {
-        throw new TRPCClientError("No enrollments found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "No enrollments found" });
       }
 
       const accountIds = enrollments
@@ -94,18 +81,15 @@ export const accountRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.auth?.userId) {
-        throw new TRPCClientError("You must be logged in to view this class");
-      }
-
       const classObj = await ctx.db.class.findFirst({
         where: {
           classCode: input.classCode,
+          deletedAt: null,
         },
       });
 
       if (!classObj) {
-        throw new TRPCClientError("Class not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
       }
 
       const enrollments = await ctx.db.enrollment.findMany({
@@ -115,7 +99,7 @@ export const accountRouter = createTRPCRouter({
       });
 
       if (!enrollments) {
-        throw new TRPCClientError("No enrollments found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "No enrollments found" });
       }
 
       // you have to be an admin to view all accounts in a class
@@ -124,7 +108,7 @@ export const accountRouter = createTRPCRouter({
       );
 
       if (!adminEnrollment || adminEnrollment.role !== "ADMIN") {
-        throw new TRPCClientError("You are not an admin of this class");
+        throw new TRPCError({ code: "FORBIDDEN", message: "You are not an admin of this class" });
       }
 
       const accountIds = enrollments
@@ -146,18 +130,26 @@ export const accountRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      if (!ctx.auth?.userId) {
-        throw new TRPCClientError("You must be logged in to view this class");
-      }
-
       const classObj = await ctx.db.class.findFirst({
         where: {
           classCode: input.classCode,
+          deletedAt: null,
         },
       });
 
       if (!classObj) {
-        throw new TRPCClientError("Class not found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
+      }
+
+      const currentUserEnrollment = await ctx.db.enrollment.findFirst({
+        where: {
+          classId: classObj.id,
+          userId: ctx.auth.userId,
+        },
+      });
+
+      if (!currentUserEnrollment) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You are not enrolled in this class" });
       }
 
       const enrollments = await ctx.db.enrollment.findMany({
@@ -168,7 +160,7 @@ export const accountRouter = createTRPCRouter({
       });
 
       if (!enrollments) {
-        throw new TRPCClientError("No enrollments found");
+        throw new TRPCError({ code: "NOT_FOUND", message: "No enrollments found" });
       }
 
       const accountIds = enrollments

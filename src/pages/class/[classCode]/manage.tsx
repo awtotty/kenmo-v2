@@ -27,15 +27,15 @@ type CustomTransaction = RouterOutputs["transaction"]["getCustomTransactions"][0
 const TransactionFeed = (prop: { classCode: string }) => {
   const [page, setPage] = useState(1);
   const pageSize = 50;
+  const queryEnabled = !!prop.classCode;
   const { data: data, isLoading: isLoadingTransactions } =
     api.transaction.getAllByClassCode.useQuery({
       classCode: prop.classCode,
       page: page,
       pageSize: pageSize,
-    });
-  const { data: accounts, isLoading: isLoadingAccounts } = api.account.getAllInClassByClassCode.useQuery({ classCode: prop.classCode });
-  const { data: allUsers, isLoading: isLoadingAllUsers } = api.user.getAllByClassCode.useQuery({ classCode: prop.classCode });
-  const [transactionsData, setTransactionsData] = useState<(Transaction & { fromUser: User | undefined, toUser: User | undefined })[]>([]);
+    }, { enabled: queryEnabled });
+  const { data: accounts, isLoading: isLoadingAccounts } = api.account.getAllInClassByClassCode.useQuery({ classCode: prop.classCode }, { enabled: queryEnabled });
+  const { data: allUsers, isLoading: isLoadingAllUsers } = api.user.getAllByClassCode.useQuery({ classCode: prop.classCode }, { enabled: queryEnabled });
 
   const totalPages = Math.ceil((data?.totalRecords ?? 0) / pageSize);
 
@@ -47,26 +47,27 @@ const TransactionFeed = (prop: { classCode: string }) => {
     if (page > 1) setPage(page - 1);
   };
 
-  // transactions have fromAccountId and toAccountId
-  // accounts have ownerId (which is a userId)
-  // users have firstName and lastName
-  // we want to find the firstName and lastName for the fromUser and toUser for each transaction 
-  useEffect(() => {
-    const newTransactionData = data?.transactions?.map((transaction: Transaction) => {
-      const fromAccount = accounts?.find((account) => account.id == transaction.fromAccountId);
-      const toAccount = accounts?.find((account) => account.id == transaction.toAccountId);
-      const fromUser = allUsers?.find((user) => user.id == fromAccount?.ownerId);
-      const toUser = allUsers?.find((user) => user.id == toAccount?.ownerId);
+  const accountById = useMemo(
+    () => new Map(accounts?.map((account) => [account.id, account]) ?? []),
+    [accounts],
+  );
+  const userById = useMemo(
+    () => new Map(allUsers?.map((user) => [user.id, user]) ?? []),
+    [allUsers],
+  );
+
+  // transactions have fromAccountId and toAccountId; accounts have ownerId (userId).
+  const transactionsData = useMemo<(Transaction & { fromUser: User | undefined, toUser: User | undefined })[]>(() => {
+    return data?.transactions?.map((transaction: Transaction) => {
+      const fromAccount = accountById.get(transaction.fromAccountId);
+      const toAccount = accountById.get(transaction.toAccountId);
       return {
         ...transaction,
-        fromUser: fromUser,
-        toUser: toUser
+        fromUser: fromAccount ? userById.get(fromAccount.ownerId) : undefined,
+        toUser: toAccount ? userById.get(toAccount.ownerId) : undefined,
       };
-    });
-    if (newTransactionData) {
-      setTransactionsData(newTransactionData);
-    }
-  }, [data?.transactions, accounts, allUsers]);
+    }) ?? [];
+  }, [data?.transactions, accountById, userById]);
 
   const isLoading = isLoadingTransactions || isLoadingAccounts || isLoadingAllUsers;
   if (isLoading) return <div>Loading...</div>;
@@ -144,17 +145,18 @@ const TransactionFeed = (prop: { classCode: string }) => {
 export default function ClassPage() {
   const apiUtils = api.useUtils();
   const router = useRouter();
-  const classCode = router.query.classCode as string;
+  const classCode = typeof router.query.classCode === "string" ? router.query.classCode : "";
   const [loadingState, setLoadingState] = useState<
     "loading" | "invalidClassCode" | "invalidEnrollments" | "loaded"
   >("loading");
+  const classCodeQueryEnabled = !!classCode;
   const { data: enrollments } =
-    api.enrollment.getAllByClassCode.useQuery({ classCode });
+    api.enrollment.getAllByClassCode.useQuery({ classCode }, { enabled: classCodeQueryEnabled });
   const [possibleTransactions, setPossibleTransactions] = useState<CustomTransaction[]>([]);
   const customTransactions = api.transaction.getCustomTransactions.useQuery();
   const user = api.user.getCurrentUser.useQuery();
-  const userAccounts = api.account.getAllByClassCode.useQuery({ classCode });
-  const classInfo = api.class.getByClassCode.useQuery({ classCode });
+  const userAccounts = api.account.getAllByClassCode.useQuery({ classCode }, { enabled: classCodeQueryEnabled });
+  const classInfo = api.class.getByClassCode.useQuery({ classCode }, { enabled: classCodeQueryEnabled });
   const [sortBy, setSortBy] = useState<"firstName" | "lastName">("lastName");
 
   const onTheFlyAmountRefs = useRef<Map<number, HTMLInputElement>>(new Map());
