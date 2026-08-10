@@ -282,22 +282,25 @@ export default function ClassPage() {
     }
   };
 
-  const handleOnTheFlyTransaction = async (enrollment: Enrollment) => {
-    const fromAccountId = userAccounts.data?.[0]?.id ?? -1
-    const toAccountId = enrollment.checkingAccountId ?? -1
+  const handleOnTheFlyTransaction = async (
+    enrollment: Enrollment,
+    operation: "transfer" | "deduction",
+  ) => {
+    const fromAccountId = userAccounts.data?.[0]?.id ?? -1;
+    const toAccountId = enrollment.checkingAccountId ?? -1;
     const amount = parseFloat((document.getElementById(`amount-${enrollment.id}-on-the-fly`) as HTMLInputElement).value);
     const note = (document.getElementById(`note-${enrollment.id}`) as HTMLInputElement).value;
-    if (isNaN(amount)) {
-      toast.error("Invalid amount");
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error("Enter an amount greater than $0");
       return;
     }
     await createTransaction({
       fromAccountId,
       toAccountId,
-      amount,
-      note
+      amount: operation === "deduction" ? -amount : amount,
+      note,
     });
-    // clear the note 
+    // clear the note
     if (noteInputRefs.current.get(enrollment.id) != undefined) {
       noteInputRefs.current.get(enrollment.id)!.value = "";
     }
@@ -424,17 +427,31 @@ export default function ClassPage() {
                       <TableHead key={index} className={tableColumnWidths[index]}>
                         <div className="flex w-full justify-between items-center">
                           <span>{column}</span>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              sortedEnrollments?.forEach((enrollment) => {
-                                if (onTheFlyAmountRefs.current.get(enrollment.id)?.value == "") return;
-                                void handleOnTheFlyTransaction(enrollment);
-                              });
-                            }}
-                          >
-                            Transfer all
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                sortedEnrollments?.forEach((enrollment) => {
+                                  if (onTheFlyAmountRefs.current.get(enrollment.id)?.value == "") return;
+                                  void handleOnTheFlyTransaction(enrollment, "transfer");
+                                });
+                              }}
+                            >
+                              Transfer all
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                sortedEnrollments?.forEach((enrollment) => {
+                                  if (onTheFlyAmountRefs.current.get(enrollment.id)?.value == "") return;
+                                  void handleOnTheFlyTransaction(enrollment, "deduction");
+                                });
+                              }}
+                            >
+                              Deduct all
+                            </Button>
+                          </div>
                         </div>
                       </TableHead>
                     );
@@ -502,16 +519,27 @@ export default function ClassPage() {
                             }}
                             placeholder="Amount"
                             type="number"
+                            min="0.01"
+                            step="0.01"
                             id={`amount-${enrollment.id}-on-the-fly`}
                             className="flex-grow min-w-0"
                           />
                           <Button
                             size="sm"
                             disabled={createIsLoading}
-                            onClick={() => void handleOnTheFlyTransaction(enrollment)}
+                            onClick={() => void handleOnTheFlyTransaction(enrollment, "transfer")}
                             className="shrink-0"
                           >
                             Transfer
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={createIsLoading}
+                            onClick={() => void handleOnTheFlyTransaction(enrollment, "deduction")}
+                            className="shrink-0"
+                          >
+                            Deduct
                           </Button>
                         </div>
                       </TableCell>

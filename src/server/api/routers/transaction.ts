@@ -9,14 +9,16 @@ import { Role } from "@prisma/client";
 import { writeAuditLog } from "~/server/audit";
 import { captureException } from "~/server/logger";
 
-const centsAmount = z
+const signedCentsAmount = z
   .number()
   .finite()
-  .positive()
-  .refine((amount) => Math.round(amount * 100) > 0, {
+  .refine((amount) => Math.round(Math.abs(amount) * 100) > 0, {
     message: "Amount must be at least $0.01",
   })
-  .transform((amount) => Math.round(amount * 100) / 100);
+  .transform((amount) => {
+    const rounded = Math.round(Math.abs(amount) * 100) / 100;
+    return amount < 0 ? -rounded : rounded;
+  });
 
 export const transactionRouter = createTRPCRouter({
   create: protectedProcedure
@@ -24,7 +26,7 @@ export const transactionRouter = createTRPCRouter({
       z.object({
         fromAccountId: z.number().int().positive(),
         toAccountId: z.number().int().positive(),
-        amount: centsAmount,
+        amount: signedCentsAmount,
         note: z.string().optional(),
       }),
     )
@@ -91,6 +93,20 @@ export const transactionRouter = createTRPCRouter({
         }
 
         const actorIsAdmin = actorEnrollment.role === Role.ADMIN;
+        const isDeduction = input.amount < 0;
+
+        if (isDeduction && !actorIsAdmin) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Only admins can create deductions",
+          });
+        }
+
+        // A negative admin amount preserves the legacy UI meaning (admin -> student,
+        // negative amount) while recording a conventional positive student -> admin transfer.
+        const amount = Math.abs(input.amount);
+        const fromAccountId = isDeduction ? input.toAccountId : input.fromAccountId;
+        const toAccountId = isDeduction ? input.fromAccountId : input.toAccountId;
         const actorOwnsFromAccount = fromEnrollment.userId === ctx.auth.userId;
         const targetIsTeacherOrAdmin =
           toEnrollment.role === Role.ADMIN || toEnrollment.role === Role.TEACHER;
@@ -113,13 +129,13 @@ export const transactionRouter = createTRPCRouter({
         await tx.ledger.createMany({
           data: [
             {
-              accountId: input.fromAccountId,
+              accountId: fromAccountId,
               debit: 0,
-              credit: input.amount,
+              credit: amount,
             },
             {
-              accountId: input.toAccountId,
-              debit: input.amount,
+              accountId: toAccountId,
+              debit: amount,
               credit: 0,
             },
           ],
@@ -128,27 +144,27 @@ export const transactionRouter = createTRPCRouter({
         // Atomic balance updates. Overdrafts are allowed by current product policy.
         await tx.account.update({
           where: {
-            id: input.fromAccountId,
+            id: fromAccountId,
           },
           data: {
-            balance: { decrement: input.amount },
+            balance: { decrement: amount },
           },
         });
 
         await tx.account.update({
           where: {
-            id: input.toAccountId,
+            id: toAccountId,
           },
           data: {
-            balance: { increment: input.amount },
+            balance: { increment: amount },
           },
         });
 
         const transaction = await tx.transaction.create({
           data: {
-            fromAccountId: input.fromAccountId,
-            toAccountId: input.toAccountId,
-            amount: input.amount,
+            fromAccountId,
+            toAccountId,
+            amount,
             note: input.note ?? "",
           },
         });
@@ -160,9 +176,10 @@ export const transactionRouter = createTRPCRouter({
           entityId: transaction.id,
           classId: fromEnrollment.classId,
           metadata: {
-            fromAccountId: input.fromAccountId,
-            toAccountId: input.toAccountId,
-            amount: input.amount,
+            fromAccountId,
+            toAccountId,
+            amount,
+            operation: isDeduction ? "deduction" : "transfer",
             actorRole: actorEnrollment.role,
           },
         });
@@ -344,7 +361,7 @@ export const transactionRouter = createTRPCRouter({
   createCustomTransaction: protectedProcedure
     .input(
       z.object({
-        amount: centsAmount,
+        amount: signedCentsAmount,
         note: z.string().optional(),
       }),
     )

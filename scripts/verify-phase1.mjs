@@ -5,13 +5,12 @@ const account = readFileSync("src/server/api/routers/account.ts", "utf8");
 
 const checks = [
   {
-    name: "transfer amount is positive, finite, and rounded to cents",
+    name: "transfer amount is finite, nonzero, and rounded to cents",
     pass:
       transaction.includes(".finite()") &&
-      transaction.includes(".positive()") &&
-      transaction.includes("Math.round(amount * 100) > 0") &&
-      transaction.includes("Math.round(amount * 100) / 100") &&
-      transaction.includes("amount: centsAmount"),
+      transaction.includes("Math.round(Math.abs(amount) * 100) > 0") &&
+      transaction.includes("Math.round(Math.abs(amount) * 100) / 100") &&
+      transaction.includes("amount: signedCentsAmount"),
   },
   {
     name: "same-account transfers are rejected with TRPCError",
@@ -34,16 +33,18 @@ const checks = [
       transaction.includes("Students can only transfer to teacher, admin, or bank accounts"),
   },
   {
-    name: "admin users can transfer within their active class",
+    name: "admins can transfer and create normalized deductions within their active class",
     pass:
       transaction.includes("actorIsAdmin") &&
+      transaction.includes("Only admins can create deductions") &&
+      transaction.includes("const fromAccountId = isDeduction ? input.toAccountId : input.fromAccountId") &&
       transaction.includes("actorEnrollment.role === Role.ADMIN"),
   },
   {
     name: "balance writes use atomic increment/decrement rather than stale absolute balances",
     pass:
-      transaction.includes("balance: { decrement: input.amount }") &&
-      transaction.includes("balance: { increment: input.amount }") &&
+      transaction.includes("balance: { decrement: amount }") &&
+      transaction.includes("balance: { increment: amount }") &&
       !transaction.includes("fromAccount.balance - input.amount") &&
       !transaction.includes("toAccount.balance + input.amount"),
   },

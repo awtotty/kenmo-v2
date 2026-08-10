@@ -152,12 +152,12 @@ function assertLedgerTransfer(calls: { ledgerCreateMany: any[] }, fromAccountId:
 async function run() {
   await rejectsWithMessage(
     caller().api.transaction.create({ fromAccountId: 101, toAccountId: 201, amount: -1, note: "bad" }),
-    /Number must be greater than 0/,
+    /Only admins can create deductions/,
   );
 
   await rejectsWithMessage(
     caller().api.transaction.create({ fromAccountId: 101, toAccountId: 201, amount: 0, note: "bad" }),
-    /Number must be greater than 0/,
+    /Amount must be at least \$0\.01/,
   );
 
   await rejectsWithMessage(
@@ -255,6 +255,22 @@ async function run() {
   ]);
   assert.deepEqual(admin.calls.transactionCreate, [
     { data: { fromAccountId: 201, toAccountId: 301, amount: 1.24, note: "admin" } },
+  ]);
+
+  const deduction = caller({
+    actorUserId: adminId,
+    fromEnrollment: enrollments.admin,
+    toEnrollment: enrollments.otherStudent,
+    actorEnrollment: enrollments.admin,
+  });
+  await deduction.api.transaction.create({ fromAccountId: 201, toAccountId: 301, amount: -1.239, note: "deduction" });
+  assertLedgerTransfer(deduction.calls, 301, 201, 1.24);
+  assert.deepEqual(deduction.calls.accountUpdate, [
+    { where: { id: 301 }, data: { balance: { decrement: 1.24 } } },
+    { where: { id: 201 }, data: { balance: { increment: 1.24 } } },
+  ]);
+  assert.deepEqual(deduction.calls.transactionCreate, [
+    { data: { fromAccountId: 301, toAccountId: 201, amount: 1.24, note: "deduction" } },
   ]);
 
   const concurrent = caller({ delayAccountUpdatesMs: 5 });
