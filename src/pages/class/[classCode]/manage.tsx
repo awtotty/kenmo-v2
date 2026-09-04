@@ -502,7 +502,7 @@ export default function ClassPage() {
                             }}
                             placeholder="Amount (+ award / - deduct)"
                             type="number"
-                            step="0.01"
+                            step="1"
                             id={`amount-${enrollment.id}-on-the-fly`}
                             className="flex-grow min-w-0"
                           />
