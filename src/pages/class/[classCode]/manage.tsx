@@ -287,8 +287,11 @@ export default function ClassPage() {
     const toAccountId = enrollment.checkingAccountId ?? -1;
     const amount = parseFloat((document.getElementById(`amount-${enrollment.id}-on-the-fly`) as HTMLInputElement).value);
     const note = (document.getElementById(`note-${enrollment.id}`) as HTMLInputElement).value;
-    if (!Number.isFinite(amount) || Math.round(Math.abs(amount) * 100) === 0) {
-      toast.error("Enter an amount of at least $0.01");
+    if (
+      !Number.isFinite(amount) ||
+      (amount !== 0 && Math.round(Math.abs(amount) * 100) === 0)
+    ) {
+      toast.error("Enter $0 or an amount of at least $0.01");
       return;
     }
     await createTransaction({

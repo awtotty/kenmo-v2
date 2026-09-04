@@ -155,13 +155,29 @@ async function run() {
     /Only admins can create deductions/,
   );
 
-  await rejectsWithMessage(
-    caller().api.transaction.create({ fromAccountId: 101, toAccountId: 201, amount: 0, note: "bad" }),
-    /Amount must be at least \$0\.01/,
-  );
+  const zero = caller();
+  await zero.api.transaction.create({
+    fromAccountId: 101,
+    toAccountId: 201,
+    amount: 0,
+    note: "zero",
+  });
+  assertLedgerTransfer(zero.calls, 101, 201, 0);
+  assert.deepEqual(zero.calls.accountUpdate, [
+    { where: { id: 101 }, data: { balance: { decrement: 0 } } },
+    { where: { id: 201 }, data: { balance: { increment: 0 } } },
+  ]);
+  assert.deepEqual(zero.calls.transactionCreate, [
+    { data: { fromAccountId: 101, toAccountId: 201, amount: 0, note: "zero" } },
+  ]);
 
   await rejectsWithMessage(
     caller().api.transaction.create({ fromAccountId: 101, toAccountId: 201, amount: 0.001, note: "bad" }),
+    /Amount must be \$0 or at least \$0\.01/,
+  );
+
+  await rejectsWithMessage(
+    caller().api.transaction.createCustomTransaction({ amount: 0, note: "template" }),
     /Amount must be at least \$0\.01/,
   );
 

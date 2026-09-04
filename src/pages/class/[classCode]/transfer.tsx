@@ -90,8 +90,13 @@ export default function ClassPage() {
       toast.error("Please enter an amount");
       return;
     }
-    if (amountInput == "" || parseFloat(amountInput) <= 0) {
-      toast.error("Amount must be greater than $0");
+    const amount = parseFloat(amountInput);
+    if (
+      !Number.isFinite(amount) ||
+      amount < 0 ||
+      (amount !== 0 && Math.round(amount * 100) === 0)
+    ) {
+      toast.error("Amount must be $0 or at least $0.01");
       return;
     }
     if (noteInput === "") {
@@ -102,7 +107,7 @@ export default function ClassPage() {
       await createTransaction({
         fromAccountId: parseInt(fromAccountId, 10),
         toAccountId: parseInt(toAccountId, 10),
-        amount: parseFloat(amountInput),
+        amount,
         note: noteInput,
       });
       await apiUtils.account.getAllByClassCode.invalidate({ classCode });

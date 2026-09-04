@@ -12,13 +12,24 @@ import { captureException } from "~/server/logger";
 const signedCentsAmount = z
   .number()
   .finite()
-  .refine((amount) => Math.round(Math.abs(amount) * 100) > 0, {
-    message: "Amount must be at least $0.01",
-  })
+  .refine(
+    (amount) =>
+      amount === 0 || Math.round(Math.abs(amount) * 100) > 0,
+    {
+      message: "Amount must be $0 or at least $0.01",
+    },
+  )
   .transform((amount) => {
     const rounded = Math.round(Math.abs(amount) * 100) / 100;
     return amount < 0 ? -rounded : rounded;
   });
+
+const nonZeroSignedCentsAmount = signedCentsAmount.refine(
+  (amount) => amount !== 0,
+  {
+    message: "Amount must be at least $0.01",
+  },
+);
 
 export const transactionRouter = createTRPCRouter({
   create: protectedProcedure
@@ -361,7 +372,7 @@ export const transactionRouter = createTRPCRouter({
   createCustomTransaction: protectedProcedure
     .input(
       z.object({
-        amount: signedCentsAmount,
+        amount: nonZeroSignedCentsAmount,
         note: z.string().optional(),
       }),
     )

@@ -5,9 +5,10 @@ const account = readFileSync("src/server/api/routers/account.ts", "utf8");
 
 const checks = [
   {
-    name: "transfer amount is finite, nonzero, and rounded to cents",
+    name: "transfer amount accepts zero and rounds nonzero values to cents",
     pass:
       transaction.includes(".finite()") &&
+      transaction.includes("amount === 0 ||") &&
       transaction.includes("Math.round(Math.abs(amount) * 100) > 0") &&
       transaction.includes("Math.round(Math.abs(amount) * 100) / 100") &&
       transaction.includes("amount: signedCentsAmount"),
