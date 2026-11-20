@@ -4,6 +4,10 @@
 
 All four tRPC v10 packages are aligned on `^10.45.4`. The lockfile also refreshes compatible transitive patches. React Query v4 is retained.
 
+## Validation stack
+
+Zod 4.6.7 and env-nextjs 0.13.11 work with tRPC 10.45.4 without a tRPC or React Query major upgrade. The error formatter uses Zod 4's `flattenError` while preserving the client `zodError.fieldErrors`/`formErrors` shape. HTTP-level regression tests cover malformed JSON, invalid account IDs/amounts (including SuperJSON NaN/Infinity), domain errors, and anonymous calls without any database access. Environment tests run with an isolated non-secret environment and validation enabled, covering defaults, numeric coercion/ranges, invalid URLs, and audit logging disabled by default.
+
 ## Framework, identity, and coupled monitoring migration
 
 Next 16.4.6 and Clerk 7.10.6 support the existing Pages Router and React 18.3.1. React 18 is deprecated in Next 16 but remains supported; tRPC v10/React Query v4 peers require React 18, so this patch does not introduce an unnecessary data-client migration.
