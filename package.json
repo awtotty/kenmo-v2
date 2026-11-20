@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "^22.13.0 || ^24.0.0"
+  },
   "scripts": {
     "build": "next build --webpack",
     "db:push": "prisma db push",
@@ -11,6 +14,9 @@
     "postinstall": "prisma generate",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
+    "audit:full": "npm audit --audit-level=high --fetch-retries=0 --fetch-timeout=20000",
+    "audit:production": "npm audit --omit=dev --audit-level=high --fetch-retries=0 --fetch-timeout=20000",
+    "audit:security": "npm run audit:full && npm run audit:production",
     "quality": "npm run verify && npm run typecheck && SKIP_ENV_VALIDATION=1 npm run lint",
     "start": "next start",
     "verify": "npm run verify:phase1 && npm run verify:phase2 && npm run verify:phase3 && npm run verify:phase4 && npm run verify:phase5 && npm run verify:phase6 && npm run verify:security",
@@ -20,7 +26,7 @@
     "verify:phase4": "node scripts/verify-phase4.mjs && SKIP_ENV_VALIDATION=1 tsx scripts/phase4-regression.test.ts",
     "verify:phase5": "node scripts/verify-phase5.mjs",
     "verify:phase6": "node scripts/verify-phase6.mjs",
-    "verify:security": "SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/proxy-regression.test.ts && SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/trpc-validation-regression.test.ts && tsx scripts/env-regression.test.ts && SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/monitoring-regression.test.ts",
+    "verify:security": "SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/proxy-regression.test.ts && SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/trpc-validation-regression.test.ts && tsx scripts/env-regression.test.ts && SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/monitoring-regression.test.ts && node scripts/eslint-config-regression.test.mjs",
     "verify:security-build": "node scripts/verify-security-build.mjs"
   },
   "dependencies": {
@@ -40,7 +46,6 @@
     "@trpc/server": "^10.45.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "eslint-config-next": "^16.4.6",
     "lucide-react": "^0.539.0",
     "next": "^16.4.6",
     "react": "18.3.1",
@@ -54,14 +59,15 @@
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^16.4.6",
-    "@types/eslint": "^8.56.2",
-    "@types/node": "^18.19.6",
+    "@types/eslint": "^9.6.1",
+    "@types/node": "^24.19.2",
     "@types/react": "^18.2.47",
     "@types/react-dom": "^18.2.18",
     "@typescript-eslint/eslint-plugin": "^8.73.0",
     "@typescript-eslint/parser": "^8.73.0",
     "autoprefixer": "^10.4.16",
     "eslint": "^9.39.5",
+    "eslint-config-next": "^16.4.6",
     "postcss": "^8.4.33",
     "prettier": "3.2.5",
     "prettier-plugin-tailwindcss": "^0.5.11",

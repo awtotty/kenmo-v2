@@ -4,10 +4,6 @@
 
 All four tRPC v10 packages are aligned on `^10.45.4`. The lockfile also refreshes compatible transitive patches. React Query v4 is retained.
 
-## Validation stack
-
-Zod 4.6.7 and env-nextjs 0.13.11 work with tRPC 10.45.4 without a tRPC or React Query major upgrade. The error formatter uses Zod 4's `flattenError` while preserving the client `zodError.fieldErrors`/`formErrors` shape. HTTP-level regression tests cover malformed JSON, invalid account IDs/amounts (including SuperJSON NaN/Infinity), domain errors, and anonymous calls without any database access. Environment tests run with an isolated non-secret environment and validation enabled, covering defaults, numeric coercion/ranges, invalid URLs, and audit logging disabled by default.
-
 ## Framework, identity, and coupled monitoring migration
 
 Next 16.4.6 and Clerk 7.10.6 support the existing Pages Router and React 18.3.1. React 18 is deprecated in Next 16 but remains supported; tRPC v10/React Query v4 peers require React 18, so this patch does not introduce an unnecessary data-client migration.
@@ -27,5 +23,19 @@ Sentry 11's deprecated string `tunnelRoute` no longer means only a Next rewrite:
 The final configuration explicitly sets `tunnelRoute: false` (omitting it alone does **not** stop Vercel handler generation in this SDK). Browser events use `/monitoring`, a narrow Next rewrite to `/api/monitoring`. The server enables `serveTunnelIntegration({ path: "/monitoring", intercept: false })`, so requests always reach the app. The Pages API handler repeats Clerk `getAuth` checking, accepts POST envelopes only, keeps the unparsed stream, and delegates forwarding to the SDK's verified Node `handleTunnelRequest(req, res, { allowedDsns: [] })` contract. The active server DSN is the only allowed destination; cookies and authorization headers are not forwarded. Direct API and locale aliases remain protected. No envelope bodies are logged.
 
 Regression tests run a local HTTP server with the real server SDK initialization and mocked Clerk identity/upstream fetch, proving that interception cannot skip handler authentication, unauthorized/wrong-method/malformed/unallowlisted requests cannot forward, and valid envelopes preserve payload and rate-limit responses but not credential/cookie headers. Build-artifact checks validate locale-aware rewrites, Node proxy matchers, Pages-only output, absence of generated App Router tunnel, and no public source maps. A Vercel-mode build (`VERCEL=1 VERCEL_ENV=preview`) passes these checks without deployment secrets. Live Clerk browser cookies and Sentry delivery still need staging smoke checks; the tunnel has not been made public.
+
+## Validation stack
+
+Zod 4.6.7 and env-nextjs 0.13.11 work with tRPC 10.45.4 without a tRPC or React Query major upgrade. The error formatter uses Zod 4's `flattenError` while preserving the client `zodError.fieldErrors`/`formErrors` shape. HTTP-level regression tests cover malformed JSON, invalid account IDs/amounts (including SuperJSON NaN/Infinity), domain errors, and anonymous calls without any database access. Environment tests run with an isolated non-secret environment and validation enabled, covering defaults, numeric coercion/ranges, invalid URLs, and audit logging disabled by default.
+
+## Tooling and audit gate
+
+CI uses Node 24; package engines permit supported Node 22.13+ and 24 LTS lines (Next 16/Sentry 11 no longer support the former Node 18 baseline). Node and ESLint types match the validated toolchain, and Next's lint configuration is a development dependency. No overrides or peer-bypass flags are needed. ESLint 10.15.0 was probed but rejected: the current Next config's React/import/a11y plugins declare peers only through ESLint 9. The final peer-clean tree therefore uses patched ESLint 9.39.5, despite npm's support-deprecation warning; revisit when those plugin peers support ESLint 10.
+
+`.github/workflows/security-quality.yml` uses read-only permissions and commit-pinned actions. It performs a clean install, full and production high/critical audit gates, quality tests, and a Vercel-mode webpack build with artifact verification. No deployment secrets or database commands are required. `npm run audit:security` runs both audits locally. A failed audit or registry request fails the gate rather than being ignored. The production audit step also runs if the full audit step fails.
+
+The publication stack has four branches, based sequentially on `main`: `security/01-compatible-updates` → `security/02-framework-auth` (including all Sentry protection and tests) → `security/03-validation-stack` → `security/05-tooling-gate`. The former `security/04-sentry` branch is obsolete and is not a separate PR.
+
+Audit snapshots after each consolidated scope (full tree total/high/critical): baseline **41/33/1**; compatible refresh **23/21/1**; framework/auth/authenticated Sentry **3/3/0**; validation stack **0/0/0**; tooling gate **0/0/0**. The consolidated framework branch's production audit is also **3/3/0**; validation and final production trees both have zero findings, including lower severities.
 
 Validation: clean `npm ci`, `SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false npm run quality`, and `SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false npm run build` pass. Builds need no credentials in this environment; this does **not** prove live Clerk login, database access, Sentry delivery, or authenticated source-map upload. No environment files or migrations are changed. Clerk currently warns that `createRouteMatcher` is deprecated; moving resource-level page protection is a separate architectural task, while protected tRPC procedures already enforce authentication independently.
