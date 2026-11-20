@@ -21,7 +21,8 @@ const checks = [
     name: "Next config preserves Sentry and image/deployment-relevant options",
     pass:
       nextConfig.includes("withSentryConfig") &&
-      nextConfig.includes('tunnelRoute: "/monitoring"') &&
+      nextConfig.includes('source: "/monitoring", destination: "/api/monitoring"') &&
+      nextConfig.includes("tunnelRoute: false") &&
       nextConfig.includes("automaticVercelMonitors: true") &&
       nextConfig.includes('hostname: "img.clerk.com"'),
   },

@@ -2,9 +2,10 @@ import { readFileSync } from "node:fs";
 
 const files = {
   serverSentry: readFileSync("sentry.server.config.ts", "utf8"),
-  clientSentry: readFileSync("sentry.client.config.ts", "utf8"),
+  clientSentry: readFileSync("src/instrumentation-client.ts", "utf8"),
   edgeSentry: readFileSync("sentry.edge.config.ts", "utf8"),
   env: readFileSync("src/env.js", "utf8"),
+  instrumentation: readFileSync("src/instrumentation.ts", "utf8"),
   logger: readFileSync("src/server/logger.ts", "utf8"),
   audit: readFileSync("src/server/audit.ts", "utf8"),
   schema: readFileSync("prisma/schema.prisma", "utf8"),
@@ -30,6 +31,16 @@ const checks = [
       files.clientSentry.includes("NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE") &&
       files.clientSentry.includes("NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE") &&
       files.clientSentry.includes("NEXT_PUBLIC_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE"),
+  },
+  {
+    name: "Sentry initializes each runtime and retains request/router error hooks and replay privacy",
+    pass:
+      files.instrumentation.includes('import("../sentry.server.config")') &&
+      files.instrumentation.includes('import("../sentry.edge.config")') &&
+      files.instrumentation.includes("Sentry.captureRequestError") &&
+      files.clientSentry.includes("Sentry.captureRouterTransitionStart") &&
+      files.clientSentry.includes("maskAllText: true") &&
+      files.clientSentry.includes("blockAllMedia: true"),
   },
   {
     name: "env schema declares Sentry config variables",

@@ -22,15 +22,11 @@
  */
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 import { getAuth } from "@clerk/nextjs/server";
-import type {
-  SignedInAuthObject,
-  SignedOutAuthObject,
-} from "@clerk/nextjs/api";
 
 import { db } from "../db";
 
 interface AuthContext {
-  auth: SignedInAuthObject | SignedOutAuthObject | null;
+  auth: ReturnType<typeof getAuth> | null;
 }
 /**
  * This helper generates the "internals" for a tRPC context. If you need to use

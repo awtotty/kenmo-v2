@@ -5,8 +5,7 @@ import {
   createTRPCRouter,
   protectedProcedure,
 } from "~/server/api/trpc";
-import { clerkClient } from "@clerk/nextjs";
-import { type User } from "@clerk/clerk-sdk-node";
+import { clerkClient, type User } from "@clerk/nextjs/server";
 import { type Enrollment, Role } from "@prisma/client/edge";
 
 const cleanUserForClient = (user: User) => {
@@ -25,7 +24,7 @@ export const userRouter = createTRPCRouter({
     .query(async ({ ctx }) => {
       try {
         return cleanUserForClient(
-          await clerkClient.users.getUser(ctx.auth.userId)
+          await (await clerkClient()).users.getUser(ctx.auth.userId)
         );
       } catch (error) {
         console.error(`Current user ${ctx.auth.userId} not found in Clerk:`, error);
@@ -66,7 +65,7 @@ export const userRouter = createTRPCRouter({
       const users = await Promise.allSettled(
         enrollments.map(async (enrollment: Enrollment) => {
           try {
-            return await clerkClient.users.getUser(enrollment.userId);
+            return await (await clerkClient()).users.getUser(enrollment.userId);
           } catch (error) {
             console.warn(`User ${enrollment.userId} not found in Clerk:`, error);
             return null;

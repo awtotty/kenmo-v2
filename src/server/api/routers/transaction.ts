@@ -242,7 +242,7 @@ export const transactionRouter = createTRPCRouter({
       const userEnrollment = enrollments.find(
         (enrollment: Enrollment) => enrollment.userId === ctx.auth.userId,
       );
-      if (!userEnrollment || userEnrollment.role !== Role.ADMIN) {
+      if (userEnrollment?.role !== Role.ADMIN) {
         throw new TRPCError({ code: "FORBIDDEN", message: "You are not an admin of this class" });
       }
 

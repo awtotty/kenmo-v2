@@ -7,7 +7,7 @@ import { ThemeProvider } from "~/contexts/ThemeContext";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (
-    <ClerkProvider {...pageProps}>
+    <ClerkProvider {...pageProps} afterSignOutUrl="/">
       <ThemeProvider>
         <Toaster position="top-center" />
         <Component {...pageProps} />
