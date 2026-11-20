@@ -4,15 +4,27 @@ import { ClassCard } from "~/components/classCard";
 import { PageLayout } from "~/components/layout";
 import { type RouterOutputs, api } from "~/utils/api";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@clerk/nextjs";
 
 type Enrollment = RouterOutputs["enrollment"]["getAllCurrentUser"][0];
 
 // a new component to show the user's enrollments
 const Enrollments = () => {
-  const { data: enrollments, isLoading } =
-    api.enrollment.getAllCurrentUser.useQuery();
+  const { isLoaded, isSignedIn } = useAuth();
+  const { data: enrollments, isLoading, error, refetch } =
+    api.enrollment.getAllCurrentUser.useQuery(undefined, {
+      enabled: isLoaded && isSignedIn === true,
+    });
 
+  if (!isLoaded) return <div>Loading...</div>;
+  if (!isSignedIn) return <div>Please sign in to view your classes.</div>;
   if (isLoading) return <div>Loading...</div>;
+  if (error) return (
+    <div role="alert" className="flex flex-col items-center gap-3">
+      <p>We couldn’t load your classes. Please try again.</p>
+      <Button onClick={() => { void refetch(); }}>Retry</Button>
+    </div>
+  );
 
   if (!enrollments || enrollments.length == 0)
     return (

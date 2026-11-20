@@ -10,6 +10,7 @@ import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import superjson from "superjson";
 
 import { type AppRouter } from "~/server/api/root";
+import { browserClerkSessionHeaders } from "./clerkSessionHeaders";
 
 const getBaseUrl = () => {
   if (typeof window !== "undefined") return ""; // browser should use relative url
@@ -41,6 +42,9 @@ export const api = createTRPCNext<AppRouter>({
         }),
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
+          // Production custom domains must not depend solely on session-cookie
+          // propagation. Read Clerk's current token at request time (never SSR).
+          headers: browserClerkSessionHeaders,
         }),
       ],
     };
