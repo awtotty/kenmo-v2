@@ -20,7 +20,7 @@
     "verify:phase4": "node scripts/verify-phase4.mjs && SKIP_ENV_VALIDATION=1 tsx scripts/phase4-regression.test.ts",
     "verify:phase5": "node scripts/verify-phase5.mjs",
     "verify:phase6": "node scripts/verify-phase6.mjs",
-    "verify:security": "SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/proxy-regression.test.ts && SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/monitoring-regression.test.ts",
+    "verify:security": "SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/proxy-regression.test.ts && SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/trpc-validation-regression.test.ts && tsx scripts/env-regression.test.ts && SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/monitoring-regression.test.ts",
     "verify:security-build": "node scripts/verify-security-build.mjs"
   },
   "dependencies": {
@@ -32,7 +32,7 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.3",
     "@sentry/nextjs": "^11.16.0",
-    "@t3-oss/env-nextjs": "^0.7.3",
+    "@t3-oss/env-nextjs": "^0.13.11",
     "@tanstack/react-query": "^4.36.1",
     "@trpc/client": "^10.45.4",
     "@trpc/next": "^10.45.4",
@@ -50,7 +50,7 @@
     "svix": "^1.15.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.22.4"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^16.4.6",
