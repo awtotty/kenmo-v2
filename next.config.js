@@ -9,9 +9,10 @@ await import("./src/env.js");
 /** @type {import("next").NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  i18n: {
-    locales: ["en"],
-    defaultLocale: "en",
+  // This app is English-only. Legacy i18n can misroute dynamic Pages API
+  // requests to a cached /en/404 on Vercel; no UI code consumes locale data.
+  async redirects() {
+    return [{ source: "/en/:path*", destination: "/:path*", permanent: true }];
   },
   async rewrites() {
     return [{ source: "/monitoring", destination: "/api/monitoring" }];

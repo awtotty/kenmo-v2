@@ -1,5 +1,15 @@
 # Security dependency upgrade notes
 
+## Production dynamic API routing follow-up
+
+The English-only legacy `i18n` configuration has been removed. There are no locale consumers in application code; normal unprefixed page/API URLs are unchanged. Existing `/en/...` bookmarks receive a method-preserving 308 redirect to canonical URLs, which retain Clerk and resource authorization. Sentry's narrow rewrite and authenticated handler are unchanged.
+
+This avoids the Vercel-only localized static-404 routing failure reported for dynamic Pages API routes in [Next.js #92114](https://github.com/vercel/next.js/issues/92114) and [#97231](https://github.com/vercel/next.js/issues/97231). The latter was reported fixed in 16.3.1, so those reports are supporting evidence, not proof that this deployment on 16.4.6 has the identical root cause. Production returned an HTML `/en/404` for tRPC; the user's session token has the supported category. Local authenticated route probes work, consistent with a deployment-specific issue.
+
+Build checks now reject reintroduced i18n configuration, assert the dynamic tRPC handler exists, verify unprefixed API/proxy/tunnel paths, and preserve old bookmark redirects. These checks and local routing smoke tests do not replace a signed-in check on the production custom domain after deployment. No auth protection has been removed and no dependency downgraded.
+
+The sections below describe the original security stack; their locale-aware build evidence predates this follow-up.
+
 ## Compatible refresh
 
 All four tRPC v10 packages are aligned on `^10.45.4`. The lockfile also refreshes compatible transitive patches. React Query v4 is retained.

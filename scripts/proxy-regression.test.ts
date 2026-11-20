@@ -25,9 +25,7 @@ for (const path of ["/api/cron", "/api/cron?scheduled=true"]) {
 assert.equal(protectCalls, 7, "only the exact cron route bypasses Clerk (handler still checks its secret)");
 
 for (const path of ["/monitoring", "/api/monitoring", "/en/monitoring", "/en/api/monitoring"]) {
-  const request = new NextRequest(`https://example.test${path}`, {
-    nextConfig: { i18n: { locales: ["en"], defaultLocale: "en" } },
-  });
+  const request = new NextRequest(`https://example.test${path}`);
   await assert.rejects(protectRoutes(signedOutAuth, request), (error) => error === denied);
 }
 
