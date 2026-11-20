@@ -1,4 +1,4 @@
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 /**
  * Run `build` or `dev` with SKIP_ENV_VALIDATION=1 to skip env validation.
@@ -13,6 +13,9 @@ const nextConfig = {
     locales: ["en"],
     defaultLocale: "en",
   },
+  async rewrites() {
+    return [{ source: "/monitoring", destination: "/api/monitoring" }];
+  },
   images: {
     remotePatterns: [
       {
@@ -23,19 +26,15 @@ const nextConfig = {
   },
 };
 
-const sentryWebpackPluginOptions = {
+export default withSentryConfig(nextConfig, {
   silent: true,
   org: "austin-totty",
   project: "kenmo",
-};
-
-const sentryOptions = {
   widenClientFileUpload: true,
-  transpileClientSDK: true,
-  tunnelRoute: "/monitoring",
-  hideSourceMaps: true,
-  disableLogger: true,
-  automaticVercelMonitors: true,
-};
-
-export default withSentryConfig(nextConfig, sentryWebpackPluginOptions, sentryOptions);
+  // Explicit false also prevents Sentry from generating an App Router tunnel
+  // and a broad envelope rewrite during Vercel builds. We serve it behind Clerk.
+  tunnelRoute: false,
+  sourcemaps: { deleteSourcemapsAfterUpload: true },
+  bundleSizeOptimizations: { excludeDebugStatements: true },
+  webpack: { automaticVercelMonitors: true },
+});

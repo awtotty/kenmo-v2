@@ -107,7 +107,7 @@ export const accountRouter = createTRPCRouter({
         (enrollment: Enrollment) => enrollment.userId === ctx.auth.userId,
       );
 
-      if (!adminEnrollment || adminEnrollment.role !== "ADMIN") {
+      if (adminEnrollment?.role !== "ADMIN") {
         throw new TRPCError({ code: "FORBIDDEN", message: "You are not an admin of this class" });
       }
 

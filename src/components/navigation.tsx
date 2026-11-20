@@ -50,7 +50,7 @@ export const Nav = () => {
                 )}
                 <span className="sr-only">Toggle theme</span>
               </Button>
-              <UserButton afterSignOutUrl="/" />
+              <UserButton />
             </div>
           </div>
         </CardContent>

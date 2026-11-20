@@ -8,4 +8,6 @@ Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? "0"),
   debug: false,
+  // Serve only through the authenticated Pages API handler, never before Clerk.
+  integrations: [Sentry.serveTunnelIntegration({ path: "/monitoring", intercept: false })],
 });

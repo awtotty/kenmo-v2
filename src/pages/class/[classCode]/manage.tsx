@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { PageLayout } from "~/components/layout";
 import { api } from "~/utils/api";
-import { type User } from "@clerk/clerk-sdk-node";
+import { type User } from "@clerk/nextjs/server";
 import { type RouterOutputs } from "~/utils/api";
 import { formatBalance, formatCurrency } from "~/utils/helpers";
 import { TrashIcon, BarsArrowDownIcon } from "@heroicons/react/20/solid";

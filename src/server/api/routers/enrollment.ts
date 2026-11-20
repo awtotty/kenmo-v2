@@ -7,7 +7,7 @@ import {
 } from "~/server/api/trpc";
 import type { Account, Class, Enrollment } from "@prisma/client/edge";
 import { Role } from "@prisma/client";
-import { clerkClient } from "@clerk/nextjs";
+import { clerkClient } from "@clerk/nextjs/server";
 import { writeAuditLog } from "~/server/audit";
 import { captureException } from "~/server/logger";
 
@@ -18,7 +18,7 @@ const cleanEnrollmentForClient = async (
 ) => {
   let user;
   try {
-    user = await clerkClient.users.getUser(enrollment.userId);
+    user = await (await clerkClient()).users.getUser(enrollment.userId);
   } catch (error) {
     console.warn(`User ${enrollment.userId} not found in Clerk:`, error);
     return null; // Return null for missing users
