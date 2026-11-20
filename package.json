@@ -26,7 +26,7 @@
     "verify:phase4": "node scripts/verify-phase4.mjs && SKIP_ENV_VALIDATION=1 tsx scripts/phase4-regression.test.ts",
     "verify:phase5": "node scripts/verify-phase5.mjs",
     "verify:phase6": "node scripts/verify-phase6.mjs",
-    "verify:security": "SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/proxy-regression.test.ts && SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/trpc-validation-regression.test.ts && tsx scripts/env-regression.test.ts && SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/monitoring-regression.test.ts && node scripts/eslint-config-regression.test.mjs",
+    "verify:security": "SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/proxy-regression.test.ts && SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/trpc-validation-regression.test.ts && tsx scripts/env-regression.test.ts && SKIP_ENV_VALIDATION=1 AUDIT_LOG_ENABLED=false tsx scripts/monitoring-regression.test.ts && node scripts/eslint-config-regression.test.mjs && tsx scripts/client-auth-regression.test.ts",
     "verify:security-build": "node scripts/verify-security-build.mjs"
   },
   "dependencies": {
